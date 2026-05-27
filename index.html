@@ -159,7 +159,18 @@ select.finput{appearance:none;-webkit-appearance:none}
 .alert-num{font-size:16px;font-weight:700;color:var(--danger)}
 .alert-min{font-size:9px;color:var(--muted)}
 
-/* USER BADGE */
+/* COLOR FILTER GRID */
+.color-filter-wrap{padding:0 16px 8px}
+.color-filter-toggle{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:12px;color:var(--text)}
+.color-filter-toggle .selected-color{display:flex;align-items:center;gap:6px}
+.color-grid{display:none;margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.color-grid.open{display:grid}
+.cg-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;border-radius:8px;border:1.5px solid transparent;transition:all .15s}
+.cg-item:active{background:var(--card2)}
+.cg-item.on{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.cg-dot{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2)}
+.cg-name{font-size:8px;color:var(--muted);text-align:center;line-height:1.2;max-width:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-item.on .cg-name{color:var(--accent)}
 .user-badge{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .user-badge:active{opacity:.7}
 
@@ -223,7 +234,7 @@ select.finput{appearance:none;-webkit-appearance:none}
     </div>
     <div class="flbl">Ваше имя</div>
     <input class="finput" type="text" id="loginName" placeholder="Иванов И.И." style="margin-bottom:24px">
-    <button onclick="doLogin()" style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Войти →</button>
+    <button id="loginBtn" style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Войти →</button>
   </div>
 </div>
 
@@ -262,7 +273,16 @@ select.finput{appearance:none;-webkit-appearance:none}
     </div>
   </div>
   <div class="filters" id="catFilters"></div>
-  <div class="filters" id="colorFilters"></div>
+  <div class="color-filter-wrap">
+    <div class="color-filter-toggle" onclick="toggleColorGrid()" id="colorToggle">
+      <div class="selected-color">
+        <span id="colorToggleDot" class="cg-dot" style="width:16px;height:16px;background:#888"></span>
+        <span id="colorToggleLabel">Все цвета</span>
+      </div>
+      <span id="colorToggleArrow" style="font-size:10px;color:var(--muted)">▼</span>
+    </div>
+    <div class="color-grid" id="colorGrid"></div>
+  </div>
   <div id="stockContent"></div>
 </div>
 
@@ -485,6 +505,14 @@ function doLogin() {
   showApp();
 }
 
+// Навешиваем обработчики после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.getElementById('loginBtn');
+  const inp = document.getElementById('loginName');
+  if (btn) btn.addEventListener('click', doLogin);
+  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+});
+
 function logout() {
   if (!confirm('Сменить пользователя?')) return;
   currentUser = null;
@@ -692,12 +720,50 @@ function buildCatFilters() {
 }
 
 function buildColorFilters() {
-  const chips = ['Все', ...colors.map(c => c.name)].map((c, i) => {
-    const col = colors.find(x => x.name === c);
-    const dot = col ? `<span class="cdot" style="background:${col.hex}"></span>` : '';
-    return `<div class="fchip${i===0?' on':''}" onclick="setColor('${c}',this)">${dot}${c}</div>`;
+  const grid = document.getElementById('colorGrid');
+  if (!grid) return;
+
+  // «Все» — первый элемент
+  const allColors = [{name:'Все', hex:''},...colors];
+  grid.innerHTML = allColors.map((c, i) => {
+    const dot = c.hex
+      ? `<div class="cg-dot" style="background:${c.hex}"></div>`
+      : `<div class="cg-dot" style="background:linear-gradient(135deg,#3b82f6,#a78bfa)"></div>`;
+    return `<div class="cg-item${i===0?' on':''}" onclick="setColorGrid('${c.name}',this)">
+      ${dot}
+      <div class="cg-name">${c.name}</div>
+    </div>`;
   }).join('');
-  document.getElementById('colorFilters').innerHTML = chips;
+}
+
+function toggleColorGrid() {
+  const grid = document.getElementById('colorGrid');
+  const arrow = document.getElementById('colorToggleArrow');
+  grid.classList.toggle('open');
+  arrow.textContent = grid.classList.contains('open') ? '▲' : '▼';
+}
+
+function setColorGrid(color, el) {
+  activeColor = color === 'Все' ? null : color;
+  document.querySelectorAll('.cg-item').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+
+  // Обновить заголовок
+  const dot = document.getElementById('colorToggleDot');
+  const lbl = document.getElementById('colorToggleLabel');
+  if (activeColor) {
+    const c = colors.find(x => x.name === activeColor);
+    dot.style.background = c ? c.hex : '#888';
+    lbl.textContent = activeColor;
+  } else {
+    dot.style.background = 'linear-gradient(135deg,#3b82f6,#a78bfa)';
+    lbl.textContent = 'Все цвета';
+  }
+
+  // Закрыть грид после выбора
+  document.getElementById('colorGrid').classList.remove('open');
+  document.getElementById('colorToggleArrow').textContent = '▼';
+  renderStock();
 }
 
 let opsCatFilter = null;
@@ -710,11 +776,6 @@ function setOpsCat(cat, el) {
   opsCatFilter = cat === 'Все' ? null : cat;
   document.querySelectorAll('#opsFilters .fchip').forEach(e => e.classList.remove('on'));
   el.classList.add('on'); renderOps();
-}
-function setColor(color, el) {
-  activeColor = color === 'Все' ? null : color;
-  document.querySelectorAll('#colorFilters .fchip').forEach(e => e.classList.remove('on'));
-  el.classList.add('on'); renderStock();
 }
 
 function colorHex(name) {
