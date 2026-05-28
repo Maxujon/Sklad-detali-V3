@@ -174,8 +174,6 @@ select.finput{appearance:none;-webkit-appearance:none}
 .cg-check{font-size:14px;color:var(--accent);display:none}
 .cg-item.on .cg-check{display:block}
 .cg-item.on .cg-name{color:var(--accent);font-weight:500}
-.user-badge{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap}
-.user-badge:active{opacity:.7}
 
 .order-card{background:var(--card);border:1px solid var(--border);border-radius:13px;margin:0 16px 8px;overflow:hidden}
 .order-hdr{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer}
@@ -227,21 +225,7 @@ select.finput{appearance:none;-webkit-appearance:none}
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0f1923;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
-  <div style="width:100%;max-width:360px">
-    <div style="text-align:center;margin-bottom:32px">
-      <div style="font-size:48px;margin-bottom:12px">🏭</div>
-      <div style="font-size:24px;font-weight:700;color:#fff">Склад дверей</div>
-      <div style="font-size:13px;color:var(--muted);margin-top:4px">Введите ваше имя для входа</div>
-    </div>
-    <div class="flbl">Ваше имя</div>
-    <input class="finput" type="text" id="loginName" placeholder="Иванов И.И." style="margin-bottom:24px" onkeydown="if(event.key==='Enter')doLogin()">
-    <button onclick="doLogin()" style="width:100%;padding:18px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent">Войти →</button>
-  </div>
-</div>
-
-<div id="appScreen" style="display:none">
+<div id="appScreen">
 <div class="header">
   <div class="header-top">
     <div>
@@ -249,8 +233,7 @@ select.finput{appearance:none;-webkit-appearance:none}
       <div class="header-sub" id="syncInfo">Синхронизация…</div>
     </div>
     <div class="header-actions">
-      <div class="user-badge" id="userBadge" onclick="logout()"></div>
-      <div class="icon-btn" id="settingsBtn" onclick="openSettings()" title="Настройки" style="display:none">
+      <div class="icon-btn" id="settingsBtn" onclick="openSettings()" title="Настройки">
         <svg viewBox="0 0 24 24" width="17" height="17" style="stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </div>
       <div class="icon-btn" onclick="switchTab('alerts', document.querySelectorAll(\'.tab\')[4])" title="Тревоги">
@@ -481,9 +464,6 @@ select.finput{appearance:none;-webkit-appearance:none}
 // ═══════════════════════════════════════════════════════════
 let SCRIPT_URL = localStorage.getItem('warehouseScriptUrl') || 'https://script.google.com/macros/s/AKfycbwAtQwx9gRjtJElcEOY_kSa14ChbfaBFiIZpzZ7Z6cvlnrZXck_CCRL9ana1WWCTfS7Zw/exec';
 
-let currentUser = JSON.parse(localStorage.getItem('w_user') || 'null');
-// currentUser: { name }
-
 let parts    = [];
 let stock    = [];
 let history  = [];
@@ -498,57 +478,16 @@ let currentStock= null;
 let moveStock   = null;
 
 // ═══════════════════════════════════════════════════════════
-//  LOGIN
+//  INIT
 // ═══════════════════════════════════════════════════════════
-function doLogin() {
-  const name = document.getElementById('loginName').value.trim();
-  if (!name) { alert('Введите ваше имя'); return; }
-  currentUser = {name};
-  localStorage.setItem('w_user', JSON.stringify(currentUser));
-  showApp();
-}
-
-function logout() {
-  if (!confirm('Сменить пользователя?')) return;
-  currentUser = null;
-  localStorage.removeItem('w_user');
-  showLogin();
-}
-
-function showLogin() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('appScreen').style.display = 'none';
-  document.getElementById('loginName').value = '';
-}
-
-function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display = 'block';
-  // Показываем имя в шапке
-  document.getElementById('userBadge').textContent = '👤 ' + currentUser.name;
-  // Кнопка настроек всегда видна
-  document.getElementById('settingsBtn').style.display = 'flex';
-  startApp();
-}
-
-async function startApp() {
+async function init() {
   document.getElementById('scriptUrl').value = SCRIPT_URL;
   if (SCRIPT_URL) {
     await syncAll();
   } else {
     loadDemoData();
+    rebuildAll();
     showToast('⚙ Введите URL Apps Script в настройках', 'err');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════════
-async function init() {
-  if (currentUser) {
-    showApp();
-  } else {
-    showLogin();
   }
 }
 
@@ -1066,7 +1005,7 @@ async function confirmOp() {
       qty,
       doc,
       location: currentStock.location,
-      user:     currentUser ? currentUser.name : 'Кладовщик'
+      user:     'Кладовщик'
     });
 
     if (res.ok) {
@@ -1082,7 +1021,7 @@ async function confirmOp() {
         type: currentOp, code: currentStock.code,
         name: partName, color, qty, doc,
         location: currentStock.location,
-        user: currentUser ? currentUser.name : 'Кладовщик'
+        user: 'Кладовщик'
       });
       opCount++;
       saveLocal();
@@ -1104,7 +1043,7 @@ async function confirmOp() {
       type: currentOp, code: currentStock.code,
       name: partName, color, qty, doc: doc + ' [офлайн]',
       location: currentStock.location,
-      user: currentUser ? currentUser.name : 'Кладовщик'
+      user: 'Кладовщик'
     });
     opCount++;
     saveLocal();
@@ -1140,7 +1079,7 @@ async function confirmMove() {
         date: fmtDate(new Date()), time: fmtTime(new Date()),
         type: 'move', code: moveStock.code, color: moveStock.color,
         qty: 0, doc: `${moveStock.location} → ${newLoc}`, location: newLoc,
-        user: currentUser ? currentUser.name : 'Кладовщик'
+        user: 'Кладовщик'
       });
       saveLocal();
       rebuildAll();
@@ -1384,7 +1323,7 @@ function toggleOrderCard(id) {
 function openNewOrder() {
   orderLineCount = 0;
   // Подставляем имя текущего пользователя
-  document.getElementById('orderMaster').value = currentUser ? currentUser.name : '';
+  document.getElementById('orderMaster').value = '';
   document.getElementById('orderComment').value = '';
   document.getElementById('orderLines').innerHTML = '';
   addOrderLine();
@@ -1530,7 +1469,7 @@ async function fulfillAll() {
         name: (parts.find(p => p.code === line.code) || {}).name || line.code,
         doc: `Заказ №${currentFulfillOrder.num} · ${currentFulfillOrder.master}`,
         location: sIdx >= 0 ? stock[sIdx].location : '',
-        user: currentUser ? currentUser.name : 'Кладовщик'
+        user: 'Кладовщик'
       });
 
       if (res.ok) {
@@ -1543,7 +1482,7 @@ async function fulfillAll() {
           qty: line.qty,
           doc: `Заказ №${currentFulfillOrder.num} · ${currentFulfillOrder.master}`,
           location: sIdx >= 0 ? stock[sIdx].location : '',
-          user: currentUser ? currentUser.name : 'Кладовщик'
+          user: 'Кладовщик'
         });
         opCount++;
         anySuccess = true;
