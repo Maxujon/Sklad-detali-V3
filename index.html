@@ -237,7 +237,7 @@ select.finput{appearance:none;-webkit-appearance:none}
     </div>
     <div class="flbl">Ваше имя</div>
     <input class="finput" type="text" id="loginName" placeholder="Иванов И.И." style="margin-bottom:24px" onkeydown="if(event.key==='Enter')doLogin()">
-    <button onclick="doLogin()" ontouchend="event.preventDefault();doLogin()" style="width:100%;padding:18px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-appearance:none;touch-action:manipulation">Войти →</button>
+    <button onclick="doLogin()" style="width:100%;padding:18px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent">Войти →</button>
   </div>
 </div>
 
@@ -277,7 +277,7 @@ select.finput{appearance:none;-webkit-appearance:none}
   </div>
   <div class="filters" id="catFilters"></div>
   <div class="color-filter-wrap">
-    <div class="color-filter-toggle" onclick="toggleColorGrid()" ontouchend="event.preventDefault();toggleColorGrid()" id="colorToggle">
+    <div class="color-filter-toggle" onclick="toggleColorGrid()" id="colorToggle">
       <div class="selected-color">
         <span id="colorToggleDot" class="cg-dot" style="background:linear-gradient(135deg,#3b82f6,#a78bfa)"></span>
         <span id="colorToggleLabel" style="font-size:13px">Все цвета</span>
@@ -565,12 +565,13 @@ async function syncAll() {
     history = res.history || [];
     rackMap = res.map     || defaultRackMap();
     colors  = res.colors  || defaultColors();
-    // Merge server orders with local (server wins for status, keep local if not on server)
+    // Merge server orders with local (server wins, keep local-only)
     if (res.orders && res.orders.length) {
       const serverIds = new Set(res.orders.map(o => o.id));
       const localOnly = orders.filter(o => !serverIds.has(o.id));
       orders = [...res.orders, ...localOnly];
     }
+    // Если сервер вернул пустой список — оставляем локальные заказы
     saveLocal();
     saveOrders();
     setSyncInfo('Синхронизировано · ' + fmtTime(new Date()));
@@ -721,7 +722,7 @@ function buildColorFilters() {
   grid.innerHTML = allColors.map((c, i) => {
     const bg = c.hex || 'linear-gradient(135deg,#3b82f6,#a78bfa)';
     const escaped = c.name.replace(/'/g, "\\'");
-    return `<div class="cg-item${i===0?' on':''}" ontouchend="event.preventDefault();setColorGrid('${escaped}',this)" onclick="setColorGrid('${escaped}',this)">
+    return `<div class="cg-item${i===0?' on':''}" onclick="setColorGrid('${escaped}',this)">
       <div class="cg-dot" style="background:${bg}"></div>
       <div class="cg-name">${c.name}</div>
       <div class="cg-check">✓</div>
@@ -772,7 +773,12 @@ function setOpsCat(cat, el) {
   el.classList.add('on'); renderOps();
 }
 
-function colorHex(name) {
+// Обрезает артикул из начала названия (работает с латиницей и кириллицей)
+function shortName(name) {
+  if (!name) return '—';
+  // Убираем артикул вида "7666 ", "ПФ.01.01.000 ", "001.001.001.100 "
+  return name.replace(/^[\w.А-ЯЁ]+\s+/, '') || name;
+}
   return (colors.find(c => c.name === name) || {}).hex || '#888';
 }
 
@@ -806,7 +812,7 @@ function itemCard(item) {
   const isWarn = !isCrit && item.qty <= item.min_qty * 1.5 && item.min_qty > 0;
   const cls = isCrit ? 'ic-low' : isWarn ? 'ic-warn' : 'ic-ok';
   const qcls = isCrit ? 'low' : isWarn ? 'warn' : '';
-  const shortName = item.name.replace(/^[\w.]+\s/, '');
+  const shortName = shortName(item.name);
   const dot = `<span class="cdot" style="background:${colorHex(item.color)}"></span>`;
   return `<div class="item-card" onclick="goToMap('${item.code}','${item.color}')">
     <div class="item-icon ${cls}">${catEmoji(item.category)}</div>
@@ -940,7 +946,7 @@ function showCell(loc) {
       <div class="popup-loc">${loc} ${isOper ? '· 🟢 оперативная зона' : ''}</div>`;
   } else {
     const isCrit = item.qty <= item.min_qty && item.min_qty > 0;
-    el.innerHTML = `<div class="popup-title">${item.name.replace(/^[\w.]+\s/, '')}</div>
+    el.innerHTML = `<div class="popup-title">${shortName(item.name)}</div>
       <div class="popup-loc">${loc} ${isOper ? '· 🟢 оперативная зона' : ''}</div>
       <div class="popup-grid">
         <div class="popup-item"><div class="popup-lbl">Артикул</div><div class="popup-val">${item.code}</div></div>
@@ -989,7 +995,7 @@ function renderOps() {
 
   el.innerHTML = '<div class="items-list">' + items.slice(0, 80).map(item => {
     const dot = `<span class="cdot" style="background:${colorHex(item.color)}"></span>`;
-    const shortName = item.name.replace(/^[\w.]+\s/, '');
+    const shortName = shortName(item.name);
     return `<div class="item-card" style="flex-wrap:wrap;gap:8px">
       <div class="item-icon ${item.qty <= item.min_qty ? 'ic-low' : 'ic-ok'}">${catEmoji(item.category)}</div>
       <div class="item-info" style="min-width:120px">
@@ -1015,7 +1021,7 @@ function openOp(type, code, colorPreset) {
 
   document.getElementById('modalTitle').textContent = type === 'in' ? 'Приёмка товара' : 'Выдача товара';
   document.getElementById('modalSub').textContent   = type === 'in' ? 'Добавить на склад' : `На складе: ${currentStock.qty || 0} шт.`;
-  document.getElementById('modalItemName').textContent = (part.name || code).replace(/^[\w.]+\s/, '');
+  document.getElementById('modalItemName').textContent = shortName(part.name || code);
   document.getElementById('modalItemCode').textContent = code + ' · ' + (currentStock.location || '—');
 
   // Color select
@@ -1044,39 +1050,66 @@ async function confirmOp() {
     if (qty > cur) { showToast('Недостаточно на складе!', 'err'); return; }
   }
 
-  // Update local immediately
-  if (sIdx >= 0) {
-    stock[sIdx].qty += currentOp === 'in' ? qty : -qty;
-  } else if (currentOp === 'in') {
-    stock.push({code: currentStock.code, color, qty, location: currentStock.location});
-  }
+  const partName = currentStock.name ||
+    (parts.find(p => p.code === currentStock.code) || {}).name || '';
 
-  const now = new Date();
-  history.unshift({
-    date: fmtDate(now), time: fmtTime(now),
-    type: currentOp, code: currentStock.code,
-    color, qty, doc, location: currentStock.location, user: 'Кладовщик'
-  });
-  opCount++;
+  // Сначала отправляем на сервер
   closeModal('opModal');
-  rebuildAll();
+  showToast('Отправка...', 'ok');
 
-  // Sync to server
   try {
     const res = await apiFetch('addOperation', {
-      type: currentOp, code: currentStock.code,
-      name: currentStock.name || (parts.find(p=>p.code===currentStock.code)||{}).name || '',
-      color, qty, doc,
-      location: currentStock.location, user: currentUser ? currentUser.name : 'Кладовщик'
+      type:     currentOp,
+      code:     currentStock.code,
+      name:     partName,
+      color,
+      qty,
+      doc,
+      location: currentStock.location,
+      user:     currentUser ? currentUser.name : 'Кладовщик'
     });
+
     if (res.ok) {
-      showToast(currentOp === 'in' ? `+${qty} принято ✓` : `-${qty} выдано ✓`, 'ok');
+      // Сервер подтвердил — обновляем локально
+      if (sIdx >= 0) {
+        stock[sIdx].qty += currentOp === 'in' ? qty : -qty;
+      } else if (currentOp === 'in') {
+        stock.push({code: currentStock.code, name: partName, color, qty, location: currentStock.location});
+      }
+      const now = new Date();
+      history.unshift({
+        date: fmtDate(now), time: fmtTime(now),
+        type: currentOp, code: currentStock.code,
+        name: partName, color, qty, doc,
+        location: currentStock.location,
+        user: currentUser ? currentUser.name : 'Кладовщик'
+      });
+      opCount++;
       saveLocal();
+      rebuildAll();
+      showToast(currentOp === 'in' ? `+${qty} принято ✓` : `-${qty} выдано ✓`, 'ok');
     } else {
-      showToast('Ошибка сервера: ' + res.error, 'err');
+      showToast('Ошибка: ' + (res.error || 'неизвестная'), 'err');
     }
   } catch(e) {
-    showToast('Сохранено локально (офлайн)', 'err');
+    // Офлайн — сохраняем локально с пометкой
+    if (sIdx >= 0) {
+      stock[sIdx].qty += currentOp === 'in' ? qty : -qty;
+    } else if (currentOp === 'in') {
+      stock.push({code: currentStock.code, name: partName, color, qty, location: currentStock.location});
+    }
+    const now = new Date();
+    history.unshift({
+      date: fmtDate(now), time: fmtTime(now),
+      type: currentOp, code: currentStock.code,
+      name: partName, color, qty, doc: doc + ' [офлайн]',
+      location: currentStock.location,
+      user: currentUser ? currentUser.name : 'Кладовщик'
+    });
+    opCount++;
+    saveLocal();
+    rebuildAll();
+    showToast('⚠ Сохранено локально — нет связи', 'err');
   }
 }
 
@@ -1095,25 +1128,28 @@ function openMove(code, color, loc) {
 async function confirmMove() {
   const newLoc = document.getElementById('moveNew').value.trim();
   if (!newLoc) { showToast('Введите новую ячейку', 'err'); return; }
-
-  const idx = stock.findIndex(s => s.code === moveStock.code && s.color === moveStock.color);
-  if (idx >= 0) stock[idx].location = newLoc;
-
-  history.unshift({
-    date: fmtDate(new Date()), time: fmtTime(new Date()),
-    type: 'move', code: moveStock.code, color: moveStock.color,
-    qty: 0, doc: `${moveStock.location} → ${newLoc}`, location: newLoc, user: 'Кладовщик'
-  });
   closeModal('moveModal');
   document.getElementById('cellPopup').classList.remove('show');
-  rebuildAll();
 
   try {
-    await apiFetch('updateCell', {code: moveStock.code, color: moveStock.color, newLocation: newLoc});
-    showToast(`Перемещено → ${newLoc} ✓`, 'ok');
-    saveLocal();
+    const res = await apiFetch('updateCell', {code: moveStock.code, color: moveStock.color, newLocation: newLoc});
+    if (res.ok) {
+      const idx = stock.findIndex(s => s.code === moveStock.code && s.color === moveStock.color);
+      if (idx >= 0) stock[idx].location = newLoc;
+      history.unshift({
+        date: fmtDate(new Date()), time: fmtTime(new Date()),
+        type: 'move', code: moveStock.code, color: moveStock.color,
+        qty: 0, doc: `${moveStock.location} → ${newLoc}`, location: newLoc,
+        user: currentUser ? currentUser.name : 'Кладовщик'
+      });
+      saveLocal();
+      rebuildAll();
+      showToast(`Перемещено → ${newLoc} ✓`, 'ok');
+    } else {
+      showToast('Ошибка: ' + res.error, 'err');
+    }
   } catch(e) {
-    showToast('Сохранено локально', 'err');
+    showToast('Нет связи с сервером', 'err');
   }
 }
 
@@ -1130,7 +1166,7 @@ function renderHistory() {
     const rawName = h.name ||
       ((parts.find(p => p.code === h.code) || {}).name) ||
       h.code || '—';
-    const partName = rawName.replace(/^[\w.]+\s/, '');
+    const partName = shortName(rawName);
     const qtyStr = h.qty ? ' · ' + (h.type==='in'?'+':h.type==='out'?'-':'') + h.qty + ' шт.' : '';
     return `<div class="hist-item">
       <div class="hist-line ${h.type === 'order' || h.type === 'move' ? 'move' : h.type}"></div>
@@ -1151,7 +1187,7 @@ function renderAlerts() {
   const el   = document.getElementById('alertsContent');
   if (!crit.length) { el.innerHTML = '<div class="empty-state">Критичных позиций нет ✓</div>'; return; }
   el.innerHTML = crit.map(item => {
-    const shortName = item.name.replace(/^[\w.]+\s/, '');
+    const shortName = shortName(item.name);
     return `<div class="alert-card">
       <div style="font-size:18px">⚠</div>
       <div class="alert-body">
@@ -1292,7 +1328,7 @@ function renderOrders() {
     const statusCls   = {new:'status-new', partial:'status-partial', done:'status-done'}[o.status] || 'status-new';
     const linesHtml = o.lines.map((l, li) => {
       const part = parts.find(p => p.code === l.code) || {};
-      const shortName = (part.name || l.code).replace(/^[\w.]+\s/, '');
+      const shortName = shortName(part.name || l.code);
       const inStock = (stock.find(s => s.code === l.code && s.color === l.color) || {}).qty || 0;
       const enough = inStock >= l.qty;
       return `<div class="order-line">
@@ -1347,7 +1383,8 @@ function toggleOrderCard(id) {
 // ── CREATE ORDER ──────────────────────────────────────────
 function openNewOrder() {
   orderLineCount = 0;
-  document.getElementById('orderMaster').value = '';
+  // Подставляем имя текущего пользователя
+  document.getElementById('orderMaster').value = currentUser ? currentUser.name : '';
   document.getElementById('orderComment').value = '';
   document.getElementById('orderLines').innerHTML = '';
   addOrderLine();
@@ -1358,7 +1395,7 @@ function addOrderLine() {
   orderLineCount++;
   const id = 'ol-' + orderLineCount;
   const partOptions = parts.map(p =>
-    `<option value="${p.code}">${p.name.replace(/^[\w.]+\s/, '')} (${p.code})</option>`
+    `<option value="${p.code}">${shortName(p.name)} (${p.code})</option>`
   ).join('');
   const colorOptions = colors.map(c =>
     `<option value="${c.name}">${c.name}</option>`
@@ -1421,8 +1458,13 @@ function submitOrder() {
   renderOrders();
   showToast(`Заказ №${order.num} создан ✓`, 'ok');
 
-  // Try save to Google Sheets
-  try { apiFetch('addOrder', order); } catch(e) {}
+  // Сохранить в Google Sheets
+  try {
+    const res = await apiFetch('addOrder', order);
+    if (!res.ok) showToast('Заказ создан, но не сохранён в таблице', 'err');
+  } catch(e) {
+    showToast('Заказ сохранён локально (нет связи)', 'err');
+  }
 }
 
 // ── TOGGLE LINE (кладовщик отмечает выданные) ─────────────
@@ -1435,6 +1477,8 @@ function toggleLine(orderId, lineIdx) {
   o.status = allDone ? 'done' : anyDone ? 'partial' : 'new';
   saveOrders();
   renderOrders();
+  // Синхронизировать статус с сервером
+  apiFetch('updateOrder', {id: o.id, status: o.status, lines: o.lines}).catch(() => {});
 }
 
 // ── FULFILL ORDER ─────────────────────────────────────────
@@ -1448,7 +1492,7 @@ function openFulfill(orderId) {
   const linesHtml = currentFulfillOrder.lines.map((l, li) => {
     if (l.issued) return '';
     const part = parts.find(p => p.code === l.code) || {};
-    const shortName = (part.name || l.code).replace(/^[\w.]+\s/, '');
+    const shortName = shortName(part.name || l.code);
     const inStock = (stock.find(s => s.code === l.code && s.color === l.color) || {}).qty || 0;
     const enough  = inStock >= l.qty;
     return `<div style="background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid ${enough?'var(--border)':'rgba(239,68,68,.3)'}">
@@ -1467,8 +1511,12 @@ function openFulfill(orderId) {
 
 async function fulfillAll() {
   if (!currentFulfillOrder) return;
+  closeModal('fulfillModal');
+  showToast('Выдача…', 'ok');
+
   const now = new Date();
   let anyError = false;
+  let anySuccess = false;
 
   for (const line of currentFulfillOrder.lines) {
     if (line.issued) continue;
@@ -1476,41 +1524,46 @@ async function fulfillAll() {
     const avail = sIdx >= 0 ? stock[sIdx].qty : 0;
     if (avail < line.qty) { anyError = true; continue; }
 
-    // Deduct stock
-    stock[sIdx].qty -= line.qty;
-    line.issued = true;
-
-    // History
-    history.unshift({
-      date: fmtDate(now), time: fmtTime(now),
-      type: 'out', code: line.code, color: line.color,
-      qty: line.qty,
-      doc: `Заказ №${currentFulfillOrder.num} · ${currentFulfillOrder.master}`,
-      location: stock[sIdx]?.location || '',
-      user: 'Кладовщик'
-    });
-    opCount++;
-
-    // Sync each line to server
     try {
-      await apiFetch('addOperation', {
+      const res = await apiFetch('addOperation', {
         type: 'out', code: line.code, color: line.color, qty: line.qty,
         name: (parts.find(p => p.code === line.code) || {}).name || line.code,
         doc: `Заказ №${currentFulfillOrder.num} · ${currentFulfillOrder.master}`,
-        location: stock[sIdx]?.location || '', user: 'Кладовщик'
+        location: sIdx >= 0 ? stock[sIdx].location : '',
+        user: currentUser ? currentUser.name : 'Кладовщик'
       });
-    } catch(e) {}
+
+      if (res.ok) {
+        // Сервер подтвердил — обновляем локально
+        if (sIdx >= 0) stock[sIdx].qty -= line.qty;
+        line.issued = true;
+        history.unshift({
+          date: fmtDate(now), time: fmtTime(now),
+          type: 'out', code: line.code, color: line.color,
+          qty: line.qty,
+          doc: `Заказ №${currentFulfillOrder.num} · ${currentFulfillOrder.master}`,
+          location: sIdx >= 0 ? stock[sIdx].location : '',
+          user: currentUser ? currentUser.name : 'Кладовщик'
+        });
+        opCount++;
+        anySuccess = true;
+      } else {
+        anyError = true;
+      }
+    } catch(e) {
+      anyError = true;
+    }
   }
 
   const allDone = currentFulfillOrder.lines.every(l => l.issued);
-  currentFulfillOrder.status = allDone ? 'done' : 'partial';
+  const anyDone = currentFulfillOrder.lines.some(l => l.issued);
+  currentFulfillOrder.status = allDone ? 'done' : anyDone ? 'partial' : 'new';
+
   saveOrders();
   saveLocal();
-  closeModal('fulfillModal');
   rebuildAll();
   renderOrders();
 
-  // Sync order status to server
   try {
     await apiFetch('updateOrder', {
       id: currentFulfillOrder.id,
@@ -1519,7 +1572,8 @@ async function fulfillAll() {
     });
   } catch(e) {}
 
-  if (anyError) showToast('Часть позиций не выдана — недостаточно на складе', 'err');
+  if (!anySuccess) showToast('Ошибка — ничего не выдано', 'err');
+  else if (anyError) showToast('Часть позиций не выдана — недостаточно', 'err');
   else showToast(`Заказ №${currentFulfillOrder.num} выдан ✓`, 'ok');
 }
 
