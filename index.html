@@ -715,9 +715,10 @@ function setOpsCat(cat, el) {
 // Обрезает артикул из начала названия (работает с латиницей и кириллицей)
 function shortName(name) {
   if (!name) return '—';
-  // Убираем артикул вида "7666 ", "ПФ.01.01.000 ", "001.001.001.100 "
   return name.replace(/^[\w.А-ЯЁ]+\s+/, '') || name;
 }
+
+function colorHex(name) {
   return (colors.find(c => c.name === name) || {}).hex || '#888';
 }
 
@@ -751,12 +752,12 @@ function itemCard(item) {
   const isWarn = !isCrit && item.qty <= item.min_qty * 1.5 && item.min_qty > 0;
   const cls = isCrit ? 'ic-low' : isWarn ? 'ic-warn' : 'ic-ok';
   const qcls = isCrit ? 'low' : isWarn ? 'warn' : '';
-  const shortName = shortName(item.name);
+  const sName = shortName(item.name);
   const dot = `<span class="cdot" style="background:${colorHex(item.color)}"></span>`;
   return `<div class="item-card" onclick="goToMap('${item.code}','${item.color}')">
     <div class="item-icon ${cls}">${catEmoji(item.category)}</div>
     <div class="item-info">
-      <div class="item-name">${shortName}</div>
+      <div class="item-name">${sName}</div>
       <div class="item-meta">${dot}${item.color} · ${item.code} · ${item.location}</div>
     </div>
     <div class="item-right">
@@ -934,11 +935,11 @@ function renderOps() {
 
   el.innerHTML = '<div class="items-list">' + items.slice(0, 80).map(item => {
     const dot = `<span class="cdot" style="background:${colorHex(item.color)}"></span>`;
-    const shortName = shortName(item.name);
+    const sName = shortName(item.name);
     return `<div class="item-card" style="flex-wrap:wrap;gap:8px">
       <div class="item-icon ${item.qty <= item.min_qty ? 'ic-low' : 'ic-ok'}">${catEmoji(item.category)}</div>
       <div class="item-info" style="min-width:120px">
-        <div class="item-name">${shortName}</div>
+        <div class="item-name">${sName}</div>
         <div class="item-meta">${dot}${item.color} · ${item.code} · ${item.qty} ${item.unit}</div>
       </div>
       <div style="display:flex;gap:5px;flex-shrink:0">
@@ -1126,11 +1127,11 @@ function renderAlerts() {
   const el   = document.getElementById('alertsContent');
   if (!crit.length) { el.innerHTML = '<div class="empty-state">Критичных позиций нет ✓</div>'; return; }
   el.innerHTML = crit.map(item => {
-    const shortName = shortName(item.name);
+    const sName = shortName(item.name);
     return `<div class="alert-card">
       <div style="font-size:18px">⚠</div>
       <div class="alert-body">
-        <div class="alert-name">${shortName}</div>
+        <div class="alert-name">${sName}</div>
         <div class="alert-meta"><span class="cdot" style="background:${colorHex(item.color)}"></span>${item.color} · ${item.code} · ${item.location}</div>
         <div class="alert-meta" style="margin-top:4px">Мин. запас: ${item.min_qty} ${item.unit}</div>
       </div>
@@ -1267,7 +1268,7 @@ function renderOrders() {
     const statusCls   = {new:'status-new', partial:'status-partial', done:'status-done'}[o.status] || 'status-new';
     const linesHtml = o.lines.map((l, li) => {
       const part = parts.find(p => p.code === l.code) || {};
-      const shortName = shortName(part.name || l.code);
+      const sName = shortName(part.name || l.code);
       const inStock = (stock.find(s => s.code === l.code && s.color === l.color) || {}).qty || 0;
       const enough = inStock >= l.qty;
       return `<div class="order-line">
@@ -1275,7 +1276,7 @@ function renderOrders() {
           ${l.issued ? '✓' : ''}
         </div>
         <div class="order-line-info">
-          <div class="order-line-name" style="${l.issued?'text-decoration:line-through;opacity:.5':''}">${shortName}</div>
+          <div class="order-line-name" style="${l.issued?'text-decoration:line-through;opacity:.5':''}">${sName}</div>
           <div class="order-line-meta">
             <span class="cdot" style="background:${colorHex(l.color)}"></span>${l.color}
             ${l.location ? `· <b style="color:var(--accent)">${l.location}</b>` : ''}
@@ -1431,11 +1432,11 @@ function openFulfill(orderId) {
   const linesHtml = currentFulfillOrder.lines.map((l, li) => {
     if (l.issued) return '';
     const part = parts.find(p => p.code === l.code) || {};
-    const shortName = shortName(part.name || l.code);
+    const sName = shortName(part.name || l.code);
     const inStock = (stock.find(s => s.code === l.code && s.color === l.color) || {}).qty || 0;
     const enough  = inStock >= l.qty;
     return `<div style="background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid ${enough?'var(--border)':'rgba(239,68,68,.3)'}">
-      <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px">${shortName}</div>
+      <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px">${sName}</div>
       <div style="display:flex;justify-content:space-between;font-size:11px;flex-wrap:wrap;gap:4px">
         <span><span class="cdot" style="background:${colorHex(l.color)}"></span>${l.color}${l.location ? ` · <b style="color:var(--accent)">${l.location}</b>` : ''}</span>
         <span>Нужно: <b>${l.qty}</b> · На складе: <b style="color:${enough?'var(--ok)':'var(--danger)'}">${inStock}</b></span>
