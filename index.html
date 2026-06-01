@@ -284,6 +284,12 @@ var orders = JSON.parse(localStorage.getItem('w_orders')||'[]');
 var opCount=0, activeCat=null, activeClr=null, mapHL=null;
 var curOp=null, curSt=null, curMv=null, curFF=null, olN=0, opsCat=null;
 
+function normLoc(loc){
+  // Normalize location: кириллические С→C, Я→Y для единого ключа карты
+  if(!loc) return '';
+  return loc.replace(/С/g,'C').replace(/Я/g,'Y');
+}
+
 function sN(n){ if(!n) return '—'; return n.replace(/^[\w.\u0410-\u042F\u0401]+\s+/,'')||n; }
 function cH(name){ var c=clrs.find(function(x){return x.name===name;}); return c?c.hex:'#888'; }
 function pad(n){ return n<10?'0'+n:''+n; }
@@ -350,7 +356,9 @@ function updateStats(){
 function getMerged(){
   return stock.map(function(s){
     var p=parts.find(function(x){return x.code===s.code;})||{};
-    return {code:s.code,name:s.name||p.name||s.code,category:p.category||'',color:s.color,qty:s.qty,location:s.location,min_qty:p.min_qty||0,unit:p.unit||'шт.'};
+    return {code:s.code,name:s.name||p.name||s.code,category:p.category||'',color:s.color,
+      qty:s.qty,location:normLoc(s.location),
+      min_qty:p.min_qty||0,unit:p.unit||'шт.'};
   });
 }
 
@@ -433,7 +441,7 @@ function renderMap(hl){
   var h='';
   rack.forEach(function(rk){
     var rid='rb-'+rk.row;
-    var slbls='<div class="slbls">';
+    var slbls='<div class="slbls"><div class="slb" style="width:24px"></div>';
     for(var s=1;s<=rk.sections;s++) slbls+='<div class="slb">С'+s+'</div>';
     slbls+='</div>';
     var rows='';
@@ -442,34 +450,82 @@ function renderMap(hl){
       var oper=t<=1;
       rows+='<div class="trow"><div class="tlbl" style="'+(oper?'color:var(--ok)':'')+'">'+lbl+'</div><div class="cscroll">';
       for(var s2=1;s2<=rk.sections;s2++){
-        var loc=rk.row+'-С'+s2+'-Я'+t;
+        var loc=rk.row+'-C'+s2+'-Y'+t;
         var item=idx[loc];
         var cls=t===0?'ground':'empty', lx='';
         if(item){ var isHL=hl&&item.code===hl.code&&item.color===hl.color; if(isHL){cls='found';lx='★';} else if(item.qty<=item.min_qty&&item.min_qty>0){cls='crit';lx='!';} else{cls='occ';lx='●';} }
-        rows+='<div class="cell '+cls+'" onclick="showCell(\''+loc+'\')">'+lx+'</div>';
+        rows+='<div class="cell '+cls+'" data-loc="'+loc+'">'+lx+'</div>';
       }
       rows+='</div></div>';
     }
-    h+='<div class="rblock"><div class="rhdr" onclick="toggleRack(\''+rid+'\')"><div style="display:flex;align-items:center"><span class="rbadge">'+rk.row+'</span><span class="rinfo">'+rk.description+' · '+rk.sections+'с · '+(rk.tiers+1)+'я · '+rk.load+'</span></div><span class="rchev" id="chev-'+rid+'">▼</span></div><div class="rbody" id="'+rid+'">'+slbls+rows+'<div class="mleg"><div class="mleg-i"><div class="mleg-b" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4)"></div>Занято</div><div class="mleg-i"><div class="mleg-b" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4)"></div>Критично</div><div class="mleg-i"><div class="mleg-b" style="background:rgba(250,204,21,.3);border:1px solid #fbbf24"></div>Найдено</div><div class="mleg-i" style="color:var(--ok)">Я0–Я1 = оперативное</div></div></div></div>';
+    h+='<div class="rblock">'+
+      '<div class="rhdr" data-rack="'+rid+'">'+
+        '<div style="display:flex;align-items:center">'+
+          '<span class="rbadge">'+rk.row+'</span>'+
+          '<span class="rinfo">'+rk.description+' · '+rk.sections+'с · '+(rk.tiers+1)+'я · '+rk.load+'</span>'+
+        '</div>'+
+        '<span class="rchev" id="chev-'+rid+'">▼</span>'+
+      '</div>'+
+      '<div class="rbody" id="'+rid+'">'+slbls+rows+
+        '<div class="mleg">'+
+          '<div class="mleg-i"><div class="mleg-b" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4)"></div>Занято</div>'+
+          '<div class="mleg-i"><div class="mleg-b" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4)"></div>Критично</div>'+
+          '<div class="mleg-i"><div class="mleg-b" style="background:rgba(250,204,21,.3);border:1px solid #fbbf24"></div>Найдено</div>'+
+          '<div class="mleg-i" style="color:var(--ok)">Я0–Я1 = оперативное</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
   });
   el.innerHTML=h;
-  if(hl){ var found=getMerged().find(function(i){return i.code===hl.code&&i.color===hl.color;}); if(found&&found.location) openRack('rb-'+found.location.split('-')[0]); }
+
+  // Event delegation — no inline onclick with Cyrillic
+  el.addEventListener('click', function(e){
+    var cell = e.target.closest('.cell');
+    if(cell && cell.dataset.loc) { showCell(cell.dataset.loc); return; }
+    var hdr = e.target.closest('.rhdr');
+    if(hdr && hdr.dataset.rack) toggleRack(hdr.dataset.rack);
+  });
+
+  if(hl){
+    var found=getMerged().find(function(i){return i.code===hl.code&&i.color===hl.color;});
+    if(found&&found.location) openRack('rb-'+found.location.split('-')[0]);
+  }
 }
 
 function toggleRack(id){ var b=document.getElementById(id),c=document.getElementById('chev-'+id); if(!b)return; b.classList.toggle('open'); if(c)c.classList.toggle('open'); }
 function openRack(id){ var b=document.getElementById(id),c=document.getElementById('chev-'+id); if(b)b.classList.add('open'); if(c)c.classList.add('open'); }
 
+function dispLoc(loc){
+  // Показываем красиво: C→С, Y→Я
+  if(!loc) return '';
+  return loc.replace(/C(\d)/g,'С$1').replace(/Y(\d)/g,'Я$1');
+}
+
 function showCell(loc){
   var item=getMerged().find(function(i){return i.location===loc;});
   var el=document.getElementById('cellPop');
-  var t=parseInt((loc.split('-')[2]||'Я0').replace('Я',''));
+  var t=parseInt((loc.split('-')[2]||'Y0').replace('Y',''));
   var oper=t<=1;
+  var dLoc=dispLoc(loc);
   if(!item){
-    el.innerHTML='<div class="cpop-title">Свободно</div><div class="cpop-loc">'+loc+(oper?' · 🟢 оперативная зона':'')+'</div>';
+    el.innerHTML='<div class="cpop-title">Свободно</div><div class="cpop-loc">'+dLoc+(oper?' · 🟢 оперативная зона':'')+'</div>';
   }else{
     var isCrit=item.qty<=item.min_qty&&item.min_qty>0;
     var ec=item.color.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    el.innerHTML='<div class="cpop-title">'+sN(item.name)+'</div><div class="cpop-loc">'+loc+(oper?' · 🟢 оперативная':'')+'</div><div class="cpop-grid"><div class="cpop-item"><div class="cpop-lbl">Артикул</div><div class="cpop-val">'+item.code+'</div></div><div class="cpop-item"><div class="cpop-lbl">Цвет</div><div class="cpop-val"><span class="cdot" style="background:'+cH(item.color)+'"></span>'+item.color+'</div></div><div class="cpop-item"><div class="cpop-lbl">Остаток</div><div class="cpop-val" style="color:'+(isCrit?'var(--danger)':'var(--ok)')+'">'+item.qty+' '+item.unit+'</div></div><div class="cpop-item"><div class="cpop-lbl">Мин.запас</div><div class="cpop-val">'+item.min_qty+' '+item.unit+'</div></div></div><div class="cpop-btns"><button class="cpbtn in" onclick="openOp(\'in\',\''+item.code+'\',\''+ec+'\')">+ Принять</button><button class="cpbtn out" onclick="openOp(\'out\',\''+item.code+'\',\''+ec+'\')">− Выдать</button><button class="cpbtn mv" onclick="openMv(\''+item.code+'\',\''+ec+'\',\''+loc+'\')">↔ Переместить</button></div>';
+    var eloc=loc.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    el.innerHTML='<div class="cpop-title">'+sN(item.name)+'</div>'+
+      '<div class="cpop-loc">'+dLoc+(oper?' · 🟢 оперативная':'')+'</div>'+
+      '<div class="cpop-grid">'+
+        '<div class="cpop-item"><div class="cpop-lbl">Артикул</div><div class="cpop-val">'+item.code+'</div></div>'+
+        '<div class="cpop-item"><div class="cpop-lbl">Цвет</div><div class="cpop-val"><span class="cdot" style="background:'+cH(item.color)+'"></span>'+item.color+'</div></div>'+
+        '<div class="cpop-item"><div class="cpop-lbl">Остаток</div><div class="cpop-val" style="color:'+(isCrit?'var(--danger)':'var(--ok)')+'">'+item.qty+' '+item.unit+'</div></div>'+
+        '<div class="cpop-item"><div class="cpop-lbl">Мин.запас</div><div class="cpop-val">'+item.min_qty+' '+item.unit+'</div></div>'+
+      '</div>'+
+      '<div class="cpop-btns">'+
+        '<button class="cpbtn in" data-op="in" data-code="'+item.code+'" data-color="'+item.color+'" onclick="openOp(\'in\',this.dataset.code,this.dataset.color)">+ Принять</button>'+
+        '<button class="cpbtn out" data-op="out" data-code="'+item.code+'" data-color="'+item.color+'" onclick="openOp(\'out\',this.dataset.code,this.dataset.color)">− Выдать</button>'+
+        '<button class="cpbtn mv" data-code="'+item.code+'" data-color="'+item.color+'" data-loc="'+loc+'" onclick="openMv(this.dataset.code,this.dataset.color,this.dataset.loc)">↔ Переместить</button>'+
+      '</div>';
   }
   el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
