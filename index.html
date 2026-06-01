@@ -6,751 +6,1557 @@
 <title>Склад дверей</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#0f1923;color:#e8edf2;min-height:100vh;padding-bottom:70px}
-:root{--bg:#0f1923;--card:#1a2535;--card2:#212f42;--accent:#3b82f6;--border:#2a3a52;--text:#e8edf2;--muted:#7a90a8;--ok:#22c55e;--warn:#f59e0b;--danger:#ef4444;--purple:#a78bfa}
-.hdr{background:#131e2e;padding:44px 16px 0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
-.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.hdr-title{font-size:20px;font-weight:700;color:#fff}
-.hdr-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.hdr-btns{display:flex;gap:8px}
-.ico-btn{width:34px;height:34px;border-radius:9px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;touch-action:manipulation}
-.ndot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:2px solid #131e2e;display:none}
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;padding:10px 0 12px}
-.stat{background:var(--card);border-radius:10px;padding:8px;border:1px solid var(--border);text-align:center}
-.stat-v{font-size:18px;font-weight:700;color:#fff}
-.stat-l{font-size:9px;color:var(--muted);margin-top:2px}
-.offline-badge{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:10px;padding:2px 6px;border-radius:5px;margin-left:6px;display:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;background:#0f1923;color:#e8edf2;min-height:100vh;overflow-x:hidden;padding-bottom:70px}
+:root{
+  --bg:#0f1923;--card:#1a2535;--card2:#212f42;--accent:#3b82f6;
+  --border:#2a3a52;--text:#e8edf2;--muted:#7a90a8;
+  --ok:#22c55e;--warn:#f59e0b;--danger:#ef4444;--purple:#a78bfa
+}
+
+/* HEADER */
+.header{background:#131e2e;padding:44px 16px 0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.header-title{font-size:20px;font-weight:700;color:#fff}
+.header-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.header-actions{display:flex;gap:8px}
+.icon-btn{width:34px;height:34px;border-radius:9px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:2px solid #131e2e;display:none}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;padding:10px 0 12px}
+.stat{background:var(--card);border-radius:10px;padding:8px 8px 6px;border:1px solid var(--border);text-align:center}
+.stat-val{font-size:18px;font-weight:700;color:#fff;line-height:1}
+.stat-lbl{font-size:9px;color:var(--muted);margin-top:3px}
+
+/* TABS */
 .tabs{display:flex;background:#131e2e;border-top:1px solid var(--border);position:fixed;bottom:0;left:0;right:0;z-index:100}
-.tab{flex:1;padding:8px 2px 12px;text-align:center;font-size:9px;color:var(--muted);border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;position:relative;touch-action:manipulation}
+.tab{flex:1;padding:8px 2px 12px;text-align:center;font-size:9px;color:var(--muted);border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s;font-family:inherit}
 .tab svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.tab.active{color:var(--accent)}.tab.active svg{stroke:var(--accent)}
-.tbadge{background:var(--danger);color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:6px;position:absolute;top:5px;right:calc(50% - 16px);display:none}
-.tbadge.warn{background:var(--warn)}
+.tab.active{color:var(--accent)}
+.tab.active svg{stroke:var(--accent)}
+.tab-badge{background:var(--danger);color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:6px;position:absolute;top:4px;right:calc(50% - 16px)}
+
+/* PANELS */
 .panel{display:none}.panel.active{display:block}
-.sw{padding:10px 16px 6px}
-.sb{background:var(--card);border:1px solid var(--border);border-radius:11px;display:flex;align-items:center;gap:8px;padding:9px 12px}
-.sb input{background:none;border:none;outline:none;color:var(--text);font-size:14px;flex:1;font-family:inherit}
-.sb input::placeholder{color:var(--muted)}
-.frow{padding:0 16px 6px;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}
-.frow::-webkit-scrollbar{display:none}
-.chip{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:4px 10px;font-size:11px;color:var(--muted);white-space:nowrap;cursor:pointer;touch-action:manipulation}
-.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.cfw{padding:0 16px 8px}
-.cft{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation}
-.cft-l{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
-.cdrop{display:none;margin-top:4px;background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;max-height:260px;overflow-y:auto}
-.cdrop.open{display:block}
-.ci{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);touch-action:manipulation}
-.ci:last-child{border-bottom:none}.ci:active{background:var(--card2)}.ci.on{background:rgba(59,130,246,.1)}
-.ci-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);flex-shrink:0}
-.ci-name{font-size:13px;color:var(--text);flex:1}
-.ci-check{font-size:14px;color:var(--accent);display:none}
-.ci.on .ci-check{display:block}.ci.on .ci-name{color:var(--accent);font-weight:500}
+
+/* SEARCH */
+.search-wrap{padding:10px 16px 6px}
+.search-box{background:var(--card);border:1px solid var(--border);border-radius:11px;display:flex;align-items:center;gap:8px;padding:9px 12px}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-size:14px;flex:1;font-family:inherit}
+.search-box input::placeholder{color:var(--muted)}
+
+/* FILTERS */
+.filters{padding:0 16px 6px;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.fchip{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:4px 10px;font-size:11px;color:var(--muted);white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all .15s}
+.fchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* SECTION LABEL */
 .slbl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:10px 16px 5px}
-.ilist{padding:0 16px}
-.icard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 12px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;touch-action:manipulation}
-.icard:active{background:var(--card2)}
-.iico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+
+/* ITEM CARDS */
+.items-list{padding:0 16px}
+.item-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 12px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .1s}
+.item-card:active{background:var(--card2)}
+.item-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
 .ic-ok{background:rgba(34,197,94,.15)}.ic-warn{background:rgba(245,158,11,.15)}.ic-low{background:rgba(239,68,68,.15)}
-.iinfo{flex:1;min-width:0}
-.iname{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.imeta{font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.iqty{text-align:right;flex-shrink:0}.iqty-v{font-size:16px;font-weight:700;color:#fff}
-.iqty-v.low{color:var(--danger)}.iqty-v.warn{color:var(--warn)}.iunit{font-size:9px;color:var(--muted)}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-right{text-align:right;flex-shrink:0}
+.item-qty{font-size:16px;font-weight:700;color:#fff}
+.item-qty.low{color:var(--danger)}.item-qty.warn{color:var(--warn)}
+.item-unit{font-size:9px;color:var(--muted)}
 .cdot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:3px;vertical-align:middle;border:1px solid rgba(255,255,255,.2);flex-shrink:0}
-.mwrap{padding:0 16px}
-.rblock{background:var(--card);border:1px solid var(--border);border-radius:13px;margin-bottom:10px;overflow:hidden}
-.rhdr{background:var(--card2);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;touch-action:manipulation}
-.rbadge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
-.rinfo{font-size:10px;color:var(--muted);margin-left:8px}
-.rchev{font-size:12px;color:var(--muted);transition:transform .2s}.rchev.open{transform:rotate(180deg)}
-.rbody{display:none;padding:10px 12px 12px}.rbody.open{display:block}
-.trow{display:flex;align-items:center;gap:4px;margin-bottom:3px}
-.tlbl{font-size:9px;color:var(--muted);width:24px;flex-shrink:0;text-align:right}
-.cscroll{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;flex:1}
-.cscroll::-webkit-scrollbar{display:none}
-.cell{width:26px;height:18px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:7px;cursor:pointer;flex-shrink:0;touch-action:manipulation}
+
+/* MAP */
+.map-wrap{padding:0 16px}
+.row-block{background:var(--card);border:1px solid var(--border);border-radius:13px;margin-bottom:10px;overflow:hidden}
+.row-hdr{background:var(--card2);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.row-hdr-left{display:flex;align-items:center;gap:8px}
+.row-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.row-badge.green{background:rgba(34,197,94,.2);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
+.row-info{font-size:10px;color:var(--muted)}
+.row-chevron{font-size:12px;color:var(--muted);transition:transform .2s}
+.row-chevron.open{transform:rotate(180deg)}
+.row-body{display:none;padding:10px 12px 12px}
+.row-body.open{display:block}
+.tier-row{display:flex;align-items:center;gap:4px;margin-bottom:3px}
+.tier-lbl{font-size:9px;color:var(--muted);width:22px;flex-shrink:0;text-align:right}
+.cells-scroll{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;flex:1}
+.cells-scroll::-webkit-scrollbar{display:none}
+.cell{width:26px;height:18px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:7px;cursor:pointer;flex-shrink:0;transition:transform .1s}
+.cell:active{transform:scale(1.15)}
 .cell.occ{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4);color:#93c5fd}
 .cell.crit{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5}
 .cell.found{background:rgba(250,204,21,.3);border-color:#fbbf24;color:#fbbf24}
 .cell.empty{background:rgba(255,255,255,.03)}
 .cell.ground{background:rgba(120,200,80,.1);border-color:rgba(120,200,80,.3);color:#86efac}
-.slbls{display:flex;gap:3px;padding-left:28px;margin-bottom:2px}
-.slb{width:26px;font-size:7px;color:var(--muted);text-align:center;flex-shrink:0}
-.mleg{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 0}
-.mleg-i{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
-.mleg-b{width:11px;height:11px;border-radius:2px}
-.cpop{background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:10px;display:none}
-.cpop.show{display:block}
-.cpop-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}
-.cpop-loc{font-size:11px;color:var(--accent);margin-bottom:8px}
-.cpop-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px}
-.cpop-item{background:var(--card);border-radius:8px;padding:6px 8px}
-.cpop-lbl{font-size:9px;color:var(--muted)}.cpop-val{font-size:12px;font-weight:500;color:var(--text);margin-top:1px}
-.cpop-btns{display:flex;gap:8px}
-.cpbtn{flex:1;padding:8px;border-radius:9px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;touch-action:manipulation}
-.cpbtn.in{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
-.cpbtn.out{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
-.cpbtn.mv{background:rgba(167,139,250,.15);color:#c4b5fd;border:1px solid rgba(167,139,250,.3)}
+.sec-labels{display:flex;gap:3px;padding-left:26px;margin-bottom:2px}
+.sec-lbl{width:26px;font-size:7px;color:var(--muted);text-align:center;flex-shrink:0}
+.map-legend{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 0}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.leg-box{width:11px;height:11px;border-radius:2px}
+
+/* CELL POPUP */
+.cell-popup{background:var(--card2);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:10px;display:none}
+.cell-popup.show{display:block}
+.popup-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}
+.popup-loc{font-size:11px;color:var(--accent);margin-bottom:8px}
+.popup-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px}
+.popup-item{background:var(--card);border-radius:8px;padding:6px 8px}
+.popup-lbl{font-size:9px;color:var(--muted)}
+.popup-val{font-size:12px;font-weight:500;color:var(--text);margin-top:1px}
+.popup-btns{display:flex;gap:8px}
+.pbtn{flex:1;padding:8px;border-radius:9px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.pbtn.in{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.pbtn.out{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.pbtn.move{background:rgba(167,139,250,.15);color:#c4b5fd;border:1px solid rgba(167,139,250,.3)}
+
+/* MODAL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-end}
 .overlay.show{display:flex}
 .modal{background:#1a2535;border-radius:20px 20px 0 0;padding:20px 20px 42px;width:100%;border-top:1px solid var(--border);max-height:90vh;overflow-y:auto}
 .modal-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:2px}
 .modal-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
-.mitem-box{background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:14px}
-.mitem-name{font-size:13px;color:var(--text)}.mitem-code{font-size:10px;color:var(--muted);margin-top:2px}
+.modal-item-box{background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:14px}
+.modal-item-name{font-size:13px;color:var(--text)}
+.modal-item-code{font-size:10px;color:var(--muted);margin-top:2px}
 .flbl{font-size:11px;color:var(--muted);margin-bottom:5px}
 .finput{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:15px;font-family:inherit;margin-bottom:12px;outline:none}
 .finput:focus{border-color:var(--accent)}
-select.finput{appearance:none}
-.mbtns{display:flex;gap:10px;margin-top:4px}
-.mbtn{flex:1;padding:13px;border-radius:13px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation}
-.mbtn.cancel{background:var(--card2);color:var(--muted)}.mbtn.ok-in{background:var(--ok);color:#fff}
-.mbtn.ok-out{background:var(--danger);color:#fff}.mbtn.ok-mv{background:var(--purple);color:#fff}
-.mbtn.ok-bl{background:var(--accent);color:#fff}
-.hitem{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:0 16px 6px;display:flex;gap:10px}
-.hline{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch}
-.hline.in{background:var(--ok)}.hline.out{background:var(--danger)}.hline.move{background:var(--purple)}
-.hbody{flex:1;min-width:0}.hact{font-size:12px;font-weight:500;color:var(--text)}
-.hdet{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}.htime{font-size:10px;color:var(--muted);white-space:nowrap}
-.acard{margin:0 16px 8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:10px 12px;display:flex;gap:10px}
-.abody{flex:1;min-width:0}.aname{font-size:12px;font-weight:500;color:#fca5a5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ameta{font-size:10px;color:rgba(252,165,165,.7);margin-top:2px}.aqty{text-align:right;flex-shrink:0}
-.anum{font-size:16px;font-weight:700;color:var(--danger)}
-.ocard{background:var(--card);border:1px solid var(--border);border-radius:13px;margin:0 16px 8px;overflow:hidden}
-.ohdr{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer;touch-action:manipulation}
-.ostatus{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;flex-shrink:0;margin-left:8px}
-.st-new{background:rgba(245,158,11,.2);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
-.st-done{background:rgba(34,197,94,.2);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
-.st-part{background:rgba(167,139,250,.2);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
-.obody{padding:0 14px 12px;border-top:1px solid var(--border)}
-.oline{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:8px}
-.oline:last-child{border-bottom:none}
-.ocheck{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;touch-action:manipulation}
-.ocheck.done{background:var(--ok);border-color:var(--ok);color:#fff;font-size:12px}
-.ofbtn{width:100%;padding:10px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px;touch-action:manipulation}
+select.finput{appearance:none;-webkit-appearance:none}
+.modal-btns{display:flex;gap:10px;margin-top:4px}
+.mbtn{flex:1;padding:13px;border-radius:13px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.mbtn.cancel{background:var(--card2);color:var(--muted)}
+.mbtn.ok-in{background:var(--ok);color:#fff}
+.mbtn.ok-out{background:var(--danger);color:#fff}
+.mbtn.ok-move{background:var(--purple);color:#fff}
+
+/* SETTINGS MODAL */
+.settings-section{margin-bottom:16px}
+.settings-title{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.url-input-wrap{display:flex;gap:8px}
+.url-save-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.test-btn{width:100%;padding:11px;background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3);border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px}
+.conn-status{font-size:12px;padding:8px 12px;border-radius:8px;margin-top:8px;display:none}
+.conn-ok{background:rgba(34,197,94,.15);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
+.conn-err{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+
+/* HISTORY */
+.hist-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:0 16px 6px;display:flex;gap:10px}
+.hist-line{width:3px;border-radius:2px;flex-shrink:0;margin-top:3px;align-self:stretch}
+.hist-line.in{background:var(--ok)}.hist-line.out{background:var(--danger)}.hist-line.move{background:var(--purple)}
+.hist-body{flex:1;min-width:0}
+.hist-action{font-size:12px;font-weight:500;color:var(--text)}
+.hist-detail{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}
+.hist-time{font-size:10px;color:var(--muted);white-space:nowrap}
+
+/* ALERTS */
+.alert-card{margin:0 16px 8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:10px 12px;display:flex;gap:10px}
+.alert-body{flex:1;min-width:0}
+.alert-name{font-size:12px;font-weight:500;color:#fca5a5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-meta{font-size:10px;color:rgba(252,165,165,.7);margin-top:2px}
+.alert-qty{text-align:right;flex-shrink:0}
+.alert-num{font-size:16px;font-weight:700;color:var(--danger)}
+.alert-min{font-size:9px;color:var(--muted)}
+
+/* COLOR FILTER GRID */
+.color-filter-wrap{padding:0 16px 8px}
+.color-filter-toggle{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:12px;color:var(--text)}
+.color-filter-toggle .selected-color{display:flex;align-items:center;gap:6px}
+.color-grid{display:none;margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.color-grid.open{display:grid}
+.cg-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;border-radius:8px;border:1.5px solid transparent;transition:all .15s}
+.cg-item:active{background:var(--card2)}
+.cg-item.on{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.cg-dot{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2)}
+.cg-name{font-size:8px;color:var(--muted);text-align:center;line-height:1.2;max-width:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-item.on .cg-name{color:var(--accent)}
+.user-badge{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.user-badge:active{opacity:.7}
+
+.order-card{background:var(--card);border:1px solid var(--border);border-radius:13px;margin:0 16px 8px;overflow:hidden}
+.order-hdr{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer}
+.order-hdr-left{flex:1;min-width:0}
+.order-title{font-size:13px;font-weight:600;color:#fff}
+.order-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.order-status{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;flex-shrink:0;margin-left:8px}
+.status-new{background:rgba(245,158,11,.2);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.status-done{background:rgba(34,197,94,.2);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
+.status-partial{background:rgba(167,139,250,.2);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.order-body{padding:0 14px 12px;border-top:1px solid var(--border)}
+.order-line{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:8px}
+.order-line:last-child{border-bottom:none}
+.order-line-info{flex:1;min-width:0}
+.order-line-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-line-meta{font-size:10px;color:var(--muted);margin-top:1px}
+.order-line-qty{font-size:14px;font-weight:700;color:#fff;flex-shrink:0;min-width:36px;text-align:right}
+.order-line-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+.order-line-check.checked{background:var(--ok);border-color:var(--ok);color:#fff}
+.order-fulfill-btn{width:100%;padding:10px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px}
+.order-fulfill-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ORDER LINE INPUT ROW */
 .ol-row{background:var(--card2);border-radius:10px;padding:10px;margin-bottom:8px;position:relative}
-.ol-rm{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px}
-.ol-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
-.ol-r2{display:flex;gap:6px;align-items:center}.ol-r2 .finput{margin-bottom:0;flex:1}
-.stsec{margin-bottom:16px}
-.sttitle{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
-.st-row{display:flex;gap:8px}
-.st-save{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;touch-action:manipulation}
-.st-test{width:100%;padding:11px;background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3);border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;touch-action:manipulation}
-.conn-ok{background:rgba(34,197,94,.15);color:var(--ok);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:12px;display:none}
-.conn-err{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:12px;display:none}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e2f45;border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;color:var(--text);z-index:300;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center}
+.ol-remove{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px}
+.ol-selects{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.ol-qty-row{display:flex;gap:6px;align-items:center}
+.ol-qty-row .finput{margin-bottom:0;flex:1}
+
+/* EMPTY ORDER */
+.order-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px}
+
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;color:var(--muted)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EMPTY */
+.empty-state{text-align:center;color:var(--muted);padding:40px 20px;font-size:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e2f45;border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;color:var(--text);z-index:300;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.tok{border-color:rgba(34,197,94,.4);color:#4ade80}.terr{border-color:rgba(239,68,68,.4);color:#f87171}
-.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:13px}
+.toast.ok-toast{border-color:rgba(34,197,94,.4);color:#4ade80}
+.toast.err-toast{border-color:rgba(239,68,68,.4);color:#f87171}
+
+/* OFFLINE BADGE */
+.offline-badge{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:10px;padding:2px 8px;border-radius:6px;margin-left:8px;display:none}
 </style>
 </head>
 <body>
-<div class="hdr">
-  <div class="hdr-top">
-    <div>
-      <div class="hdr-title">Склад дверей <span class="offline-badge" id="offlineBadge">офлайн</span></div>
-      <div class="hdr-sub" id="syncInfo">Загрузка…</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0f1923;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:48px;margin-bottom:12px">🏭</div>
+      <div style="font-size:24px;font-weight:700;color:#fff">Склад дверей</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px">Введите ваше имя для входа</div>
     </div>
-    <div class="hdr-btns">
-      <div class="ico-btn" onclick="openSettings()"><svg viewBox="0 0 24 24" width="17" height="17" style="stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-      <div class="ico-btn" onclick="switchTab('alerts',document.querySelectorAll('.tab')[4])"><svg viewBox="0 0 24 24" width="17" height="17" style="stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="ndot" id="notifDot"></div></div>
-    </div>
-  </div>
-  <div class="stats">
-    <div class="stat"><div class="stat-v" id="sTot">–</div><div class="stat-l">позиций</div></div>
-    <div class="stat"><div class="stat-v" style="color:var(--danger)" id="sCrit">–</div><div class="stat-l">критичных</div></div>
-    <div class="stat"><div class="stat-v" style="color:var(--ok)" id="sOps">0</div><div class="stat-l">операций</div></div>
-    <div class="stat"><div class="stat-v" style="color:var(--warn)" id="sZero">–</div><div class="stat-l">нет в наличии</div></div>
+    <div class="flbl">Ваше имя</div>
+    <input class="finput" type="text" id="loginName" placeholder="Иванов И.И." style="margin-bottom:24px">
+    <button id="loginBtn" style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Войти →</button>
   </div>
 </div>
 
+<div id="appScreen" style="display:none">
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">Склад дверей <span class="offline-badge" id="offlineBadge">офлайн</span></div>
+      <div class="header-sub" id="syncInfo">Синхронизация…</div>
+    </div>
+    <div class="header-actions">
+      <div class="user-badge" id="userBadge" onclick="logout()"></div>
+      <div class="icon-btn" id="settingsBtn" onclick="openSettings()" title="Настройки" style="display:none">
+        <svg viewBox="0 0 24 24" width="17" height="17" style="stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+      <div class="icon-btn" onclick="switchTab('alerts', document.querySelectorAll(\'.tab\')[4])" title="Тревоги">
+        <svg viewBox="0 0 24 24" width="17" height="17" style="stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot" id="notifDot"></div>
+      </div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val" id="sTot">–</div><div class="stat-lbl">позиций</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--danger)" id="sCrit">–</div><div class="stat-lbl">критичных</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--ok)" id="sOps">0</div><div class="stat-lbl">операций</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--warn)" id="sZero">–</div><div class="stat-lbl">нет в наличии</div></div>
+  </div>
+</div>
+
+<!-- ОСТАТКИ -->
 <div class="panel active" id="panel-stock">
-  <div class="sw"><div class="sb"><svg viewBox="0 0 24 24" width="15" height="15" style="stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Артикул, название, цвет…" oninput="renderStock()"></div></div>
-  <div class="frow" id="catFilters"></div>
-  <div class="cfw">
-    <div class="cft" onclick="toggleCDrop()"><div class="cft-l"><span id="cDot" class="ci-dot" style="background:linear-gradient(135deg,#3b82f6,#a78bfa)"></span><span id="cLbl">Все цвета</span></div><span id="cArr" style="font-size:10px;color:var(--muted)">▼</span></div>
-    <div class="cdrop" id="colorDrop"></div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="15" height="15" style="stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Артикул, название, цвет…" oninput="renderStock()">
+    </div>
+  </div>
+  <div class="filters" id="catFilters"></div>
+  <div class="color-filter-wrap">
+    <div class="color-filter-toggle" onclick="toggleColorGrid()" id="colorToggle">
+      <div class="selected-color">
+        <span id="colorToggleDot" class="cg-dot" style="width:16px;height:16px;background:#888"></span>
+        <span id="colorToggleLabel">Все цвета</span>
+      </div>
+      <span id="colorToggleArrow" style="font-size:10px;color:var(--muted)">▼</span>
+    </div>
+    <div class="color-grid" id="colorGrid"></div>
   </div>
   <div id="stockContent"></div>
 </div>
 
+<!-- КАРТА -->
 <div class="panel" id="panel-map">
-  <div class="sw"><div class="sb"><svg viewBox="0 0 24 24" width="15" height="15" style="stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="mapSrch" placeholder="Найти на карте…" oninput="doMapSearch()"></div></div>
-  <div class="cpop" id="cellPop"></div>
-  <div class="mwrap" id="mapContent"></div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="15" height="15" style="stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="mapSearch" placeholder="Найти на карте…" oninput="doMapSearch()">
+    </div>
+  </div>
+  <div class="cell-popup" id="cellPopup"></div>
+  <div class="map-wrap" id="mapContent"></div>
 </div>
 
+<!-- ОПЕРАЦИИ -->
 <div class="panel" id="panel-ops">
-  <div class="sw"><div class="sb"><svg viewBox="0 0 24 24" width="15" height="15" style="stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="opsSrch" placeholder="Найти деталь…" oninput="renderOps()"></div></div>
-  <div class="frow" id="opsFilters"></div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="15" height="15" style="stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="opsSearch" placeholder="Найти деталь…" oninput="renderOps()">
+    </div>
+  </div>
+  <div class="filters" id="opsFilters"></div>
   <div id="opsContent"></div>
 </div>
 
+<!-- ЗАКАЗЫ -->
+<div class="panel" id="panel-orders">
+  <!-- МАСТЕР: создать заказ -->
+  <div id="orderMasterView">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px">
+      <div class="slbl" style="padding:0">Заказы от мастера</div>
+      <button onclick="openNewOrder()" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">+ Новый заказ</button>
+    </div>
+    <div id="ordersList"></div>
+  </div>
+</div>
+
+<!-- ИСТОРИЯ -->
 <div class="panel" id="panel-hist">
   <div class="slbl">История операций</div>
   <div id="histContent"></div>
 </div>
 
+<!-- ТРЕВОГИ -->
 <div class="panel" id="panel-alerts">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 4px">
     <div class="slbl" style="padding:0">Критичный запас</div>
-    <button onclick="exportAlerts()" style="background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3);border-radius:9px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation">📋 В таблицу</button>
+    <button onclick="exportAlerts()" style="background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3);border-radius:9px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Экспорт в таблицу</button>
   </div>
   <div id="alertsContent"></div>
 </div>
 
-<div class="panel" id="panel-orders">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px">
-    <div class="slbl" style="padding:0">Заказы от мастера</div>
-    <button onclick="openNewOrder()" style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation">+ Новый</button>
-  </div>
-  <div id="ordersList"></div>
-</div>
-
+<!-- BOTTOM TABS -->
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('stock',this)"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Остатки</button>
-  <button class="tab" onclick="switchTab('map',this)"><svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</button>
-  <button class="tab" onclick="switchTab('ops',this)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Операция</button>
-  <button class="tab" onclick="switchTab('hist',this)"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>История</button>
-  <button class="tab" onclick="switchTab('orders',this)" style="position:relative"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg><span class="tbadge warn" id="oBadge" style="display:none">0</span>Заказы</button>
-  <button class="tab" onclick="switchTab('alerts',this)" style="position:relative"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="tbadge" id="aBadge" style="display:none">0</span>Тревоги</button>
+  <button class="tab active" onclick="switchTab('stock',this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Остатки
+  </button>
+  <button class="tab" onclick="switchTab('map',this)">
+    <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта
+  </button>
+  <button class="tab" onclick="switchTab('ops',this)">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Операция
+  </button>
+  <button class="tab" onclick="switchTab('hist',this)">
+    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>История
+  </button>
+  <button class="tab" onclick="switchTab('orders',this)" style="position:relative">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+    <span id="orderTabBadge" style="display:none;position:absolute;top:6px;right:calc(50% - 14px);background:var(--warn);color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:6px">0</span>
+    Заказы
+  </button>
+  <button class="tab" onclick="switchTab('alerts',this)" style="position:relative">
+    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span id="alertTabBadge" style="display:none;position:absolute;top:6px;right:calc(50% - 14px);background:var(--danger);color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:6px">0</span>
+    Тревоги
+  </button>
 </div>
 
+<!-- OP MODAL -->
 <div class="overlay" id="opModal">
   <div class="modal">
-    <div class="modal-title" id="opTitle">Приёмка</div><div class="modal-sub" id="opSub"></div>
-    <div class="mitem-box"><div class="mitem-name" id="opName"></div><div class="mitem-code" id="opCode"></div></div>
-    <div class="flbl">Цвет</div><select class="finput" id="opColor"></select>
-    <div class="flbl">Количество</div><input class="finput" type="number" id="opQty" placeholder="0" min="1">
-    <div class="flbl">Документ</div><input class="finput" type="text" id="opDoc" placeholder="№ накладной / заявки">
-    <div class="mbtns"><button class="mbtn cancel" onclick="closeModal('opModal')">Отмена</button><button class="mbtn" id="opConfirm" onclick="confirmOp()">Подтвердить</button></div>
+    <div class="modal-title" id="modalTitle">Приёмка</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-item-box">
+      <div class="modal-item-name" id="modalItemName"></div>
+      <div class="modal-item-code" id="modalItemCode"></div>
+    </div>
+    <div class="flbl">Цвет</div>
+    <select class="finput" id="modalColor"></select>
+    <div class="flbl">Количество</div>
+    <input class="finput" type="number" id="modalQty" placeholder="0" min="1">
+    <div class="flbl">Документ (накладная / заявка)</div>
+    <input class="finput" type="text" id="modalDoc" placeholder="№ документа">
+    <div class="modal-btns">
+      <button class="mbtn cancel" onclick="closeModal('opModal')">Отмена</button>
+      <button class="mbtn" id="modalConfirm" onclick="confirmOp()">Подтвердить</button>
+    </div>
   </div>
 </div>
 
-<div class="overlay" id="mvModal">
+<!-- MOVE MODAL -->
+<div class="overlay" id="moveModal">
   <div class="modal">
-    <div class="modal-title">Переместить</div><div class="modal-sub">Укажите новую ячейку</div>
-    <div class="mitem-box"><div class="mitem-name" id="mvName"></div><div class="mitem-code" id="mvCode"></div></div>
-    <div class="flbl">Текущая ячейка</div><input class="finput" id="mvCur" disabled>
-    <div class="flbl">Новая ячейка (D-С5-Я3)</div><input class="finput" type="text" id="mvNew" placeholder="A-С1-Я2">
-    <div class="mbtns"><button class="mbtn cancel" onclick="closeModal('mvModal')">Отмена</button><button class="mbtn ok-mv" onclick="confirmMove()">Переместить</button></div>
+    <div class="modal-title">Переместить товар</div>
+    <div class="modal-sub">Укажите новую ячейку</div>
+    <div class="modal-item-box">
+      <div class="modal-item-name" id="moveItemName"></div>
+      <div class="modal-item-code" id="moveItemCode"></div>
+    </div>
+    <div class="flbl">Текущая ячейка</div>
+    <input class="finput" id="moveCurrent" disabled>
+    <div class="flbl">Новая ячейка (формат: D-С5-Я3)</div>
+    <input class="finput" type="text" id="moveNew" placeholder="A-С1-Я2">
+    <div class="modal-btns">
+      <button class="mbtn cancel" onclick="closeModal('moveModal')">Отмена</button>
+      <button class="mbtn ok-move" onclick="confirmMove()">Переместить</button>
+    </div>
   </div>
 </div>
 
-<div class="overlay" id="ordModal">
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsModal">
   <div class="modal">
-    <div class="modal-title">Новый заказ</div><div class="modal-sub">Заявка на выдачу деталей</div>
-    <div class="flbl">Имя мастера</div><input class="finput" type="text" id="oMaster" placeholder="Иванов И.И.">
-    <div class="flbl">Комментарий</div><input class="finput" type="text" id="oComment" placeholder="Модель двери, заявка №…">
+    <div class="modal-title">Настройки</div>
+    <div class="modal-sub">Подключение к Google Таблице</div>
+
+    <div class="settings-section">
+      <div class="settings-title">URL Apps Script</div>
+      <div class="url-input-wrap">
+        <input class="finput" id="scriptUrl" placeholder="https://script.google.com/macros/s/…/exec" style="margin-bottom:0;flex:1">
+        <button class="url-save-btn" onclick="saveUrl()">Сохранить</button>
+      </div>
+      <button class="test-btn" onclick="testConnection()">Проверить соединение</button>
+      <div class="conn-status" id="connStatus"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">Синхронизация</div>
+      <button class="test-btn" onclick="syncAll()">🔄 Синхронизировать сейчас</button>
+    </div>
+
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="mbtn cancel" onclick="closeModal('settingsModal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ORDER MODAL -->
+<div class="overlay" id="newOrderModal">
+  <div class="modal">
+    <div class="modal-title">Новый заказ</div>
+    <div class="modal-sub">Мастер сборочного цеха</div>
+    <div class="flbl">Имя мастера</div>
+    <input class="finput" type="text" id="orderMaster" placeholder="Иванов И.И.">
+    <div class="flbl">Комментарий (модель двери, заявка…)</div>
+    <input class="finput" type="text" id="orderComment" placeholder="Дверь Лагуна, заявка №12">
+
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="flbl" style="margin:0">Позиции</div>
-      <button onclick="addOLine()" style="background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;touch-action:manipulation">+ Добавить</button>
+      <div class="flbl" style="margin:0">Позиции заказа</div>
+      <button onclick="addOrderLine()" style="background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">+ Добавить</button>
     </div>
-    <div id="oLines"></div>
-    <div class="mbtns" style="margin-top:12px"><button class="mbtn cancel" onclick="closeModal('ordModal')">Отмена</button><button class="mbtn ok-bl" onclick="submitOrder()">Отправить заказ</button></div>
-  </div>
-</div>
+    <div id="orderLines"></div>
 
-<div class="overlay" id="ffModal">
-  <div class="modal">
-    <div class="modal-title" id="ffTitle">Выдача по заказу</div><div class="modal-sub" id="ffSub"></div>
-    <div id="ffLines"></div>
-    <div class="mbtns" style="margin-top:12px"><button class="mbtn cancel" onclick="closeModal('ffModal')">Закрыть</button><button class="mbtn ok-out" onclick="fulfillAll()">Выдать всё ✓</button></div>
-  </div>
-</div>
-
-<div class="overlay" id="stModal">
-  <div class="modal">
-    <div class="modal-title">Настройки</div><div class="modal-sub">Подключение к Google Таблице</div>
-    <div class="stsec">
-      <div class="sttitle">URL Apps Script</div>
-      <div class="st-row"><input class="finput" id="stUrl" placeholder="https://script.google.com/…" style="margin-bottom:0;flex:1"><button class="st-save" onclick="saveUrl()">Сохранить</button></div>
-      <button class="st-test" onclick="testConn()">Проверить соединение</button>
-      <div id="connOk" class="conn-ok"></div><div id="connErr" class="conn-err"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="mbtn cancel" onclick="closeModal('newOrderModal')">Отмена</button>
+      <button class="mbtn ok-in" onclick="submitOrder()">Отправить заказ</button>
     </div>
-    <div class="stsec"><div class="sttitle">Синхронизация</div><button class="st-test" onclick="syncAll()">🔄 Синхронизировать сейчас</button></div>
-    <div class="mbtns" style="margin-top:8px"><button class="mbtn cancel" onclick="closeModal('stModal')">Закрыть</button></div>
   </div>
 </div>
 
+<!-- ORDER FULFILL MODAL (кладовщик выдаёт) -->
+<div class="overlay" id="fulfillModal">
+  <div class="modal">
+    <div class="modal-title" id="fulfillTitle">Выдача по заказу</div>
+    <div class="modal-sub" id="fulfillSub"></div>
+    <div id="fulfillLines"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="mbtn cancel" onclick="closeModal('fulfillModal')">Закрыть</button>
+      <button class="mbtn ok-out" onclick="fulfillAll()">Выдать всё ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
+</div><!-- end appScreen -->
 
 <script>
-var SCRIPT_URL = localStorage.getItem('warehouseScriptUrl') || 'https://script.google.com/macros/s/AKfycbwAtQwx9gRjtJElcEOY_kSa14ChbfaBFiIZpzZ7Z6cvlnrZXck_CCRL9ana1WWCTfS7Zw/exec';
-var parts=[], stock=[], hist=[], rack=[], clrs=[];
-var orders = JSON.parse(localStorage.getItem('w_orders')||'[]');
-var opCount=0, activeCat=null, activeClr=null, mapHL=null;
-var curOp=null, curSt=null, curMv=null, curFF=null, olN=0, opsCat=null;
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let SCRIPT_URL = localStorage.getItem('warehouseScriptUrl') || 'https://script.google.com/macros/s/AKfycbwAtQwx9gRjtJElcEOY_kSa14ChbfaBFiIZpzZ7Z6cvlnrZXck_CCRL9ana1WWCTfS7Zw/exec';
 
-function normLoc(loc){
-  // Normalize location: кириллические С→C, Я→Y для единого ключа карты
-  if(!loc) return '';
-  return loc.replace(/С/g,'C').replace(/Я/g,'Y');
+let currentUser = JSON.parse(localStorage.getItem('w_user') || 'null');
+// currentUser: { name }
+
+let parts    = [];
+let stock    = [];
+let history  = [];
+let rackMap  = [];
+let colors   = [];
+let opCount  = 0;
+let activeCat   = null;
+let activeColor = null;
+let mapHighlight= null;
+let currentOp   = null;
+let currentStock= null;
+let moveStock   = null;
+
+// ═══════════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════════
+function doLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  if (!name) { alert('Введите ваше имя'); return; }
+  currentUser = {name};
+  localStorage.setItem('w_user', JSON.stringify(currentUser));
+  showApp();
 }
 
-function sN(n){ if(!n) return '—'; return n.replace(/^[\w.\u0410-\u042F\u0401]+\s+/,'')||n; }
-function cH(name){ var c=clrs.find(function(x){return x.name===name;}); return c?c.hex:'#888'; }
-function pad(n){ return n<10?'0'+n:''+n; }
-function fD(d){ return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear(); }
-function fT(d){ return pad(d.getHours())+':'+pad(d.getMinutes()); }
-function toast(msg,type){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+(type==='ok'?'tok':'terr'); setTimeout(function(){t.className='toast';},2800); }
-function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-function switchTab(id,el){ document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');}); document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');}); el.classList.add('active'); document.getElementById('panel-'+id).classList.add('active'); window.scrollTo(0,0); }
+// Навешиваем обработчики после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.getElementById('loginBtn');
+  const inp = document.getElementById('loginName');
+  if (btn) btn.addEventListener('click', doLogin);
+  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+});
 
-document.querySelectorAll('.overlay').forEach(function(ov){ ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('show');}); });
-
-async function api(action, body){
-  if(!SCRIPT_URL) throw new Error('No URL');
-  var url = SCRIPT_URL+'?action='+action;
-  if(body) url += '&payload='+encodeURIComponent(JSON.stringify(body));
-  var r = await fetch(url,{method:'GET',redirect:'follow'});
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
+function logout() {
+  if (!confirm('Сменить пользователя?')) return;
+  currentUser = null;
+  localStorage.removeItem('w_user');
+  showLogin();
 }
 
-function saveL(){ localStorage.setItem('w_parts',JSON.stringify(parts)); localStorage.setItem('w_stock',JSON.stringify(stock)); localStorage.setItem('w_hist',JSON.stringify(hist.slice(0,200))); localStorage.setItem('w_rack',JSON.stringify(rack)); localStorage.setItem('w_clrs',JSON.stringify(clrs)); localStorage.setItem('lastSync',fT(new Date())); }
-function loadL(){ parts=JSON.parse(localStorage.getItem('w_parts')||'[]'); stock=JSON.parse(localStorage.getItem('w_stock')||'[]'); hist=JSON.parse(localStorage.getItem('w_hist')||'[]'); rack=JSON.parse(localStorage.getItem('w_rack')||'null')||defRack(); clrs=JSON.parse(localStorage.getItem('w_clrs')||'null')||defClrs(); }
-function saveOrds(){ localStorage.setItem('w_orders',JSON.stringify(orders)); }
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginName').value = '';
+}
 
-function defRack(){ return [{row:'A',sections:4,tiers:4,length:'105 п/м',load:'1000 кг',description:'Ряд 1A'},{row:'B',sections:3,tiers:4,length:'105 п/м',load:'1000 кг',description:'Ряд 1B'},{row:'C',sections:10,tiers:5,length:'280 п/м',load:'1000 кг',description:'Ряд 2 — стоевая'},{row:'D',sections:13,tiers:7,length:'357 п/м',load:'550 кг',description:'Ряд 3D — основной'},{row:'E',sections:13,tiers:7,length:'357 п/м',load:'550 кг',description:'Ряд 3E — основной'},{row:'F',sections:11,tiers:6,length:'312 п/м',load:'550 кг',description:'Ряд 4'}]; }
-function defClrs(){ return [{name:'Белый',hex:'#F8F8F8'},{name:'Венге',hex:'#3D2B1F'},{name:'Орех',hex:'#8B5E3C'},{name:'Антрацит',hex:'#4A4A55'},{name:'Дуб сонома',hex:'#C9A96E'},{name:'Капучино',hex:'#D4B896'},{name:'Беленый дуб',hex:'#E8D5AA'},{name:'Серый',hex:'#9CA3AF'}]; }
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  // Показываем имя в шапке
+  document.getElementById('userBadge').textContent = '👤 ' + currentUser.name;
+  // Кнопка настроек всегда видна
+  document.getElementById('settingsBtn').style.display = 'flex';
+  startApp();
+}
 
-async function syncAll(){
-  document.getElementById('syncInfo').textContent='Синхронизация…';
-  try{
-    var r=await api('getAll');
-    if(!r.ok) throw new Error(r.error||'Ошибка');
-    parts=r.parts||[]; stock=r.stock||[]; hist=r.history||[];
-    rack=(r.map&&r.map.length)?r.map:defRack();
-    clrs=(r.colors&&r.colors.length)?r.colors:defClrs();
-    if(r.orders&&r.orders.length){ var ids=new Set(r.orders.map(function(o){return o.id;})); orders=r.orders.concat(orders.filter(function(o){return !ids.has(o.id);})); }
-    saveL(); saveOrds();
-    document.getElementById('syncInfo').textContent='Синхронизировано · '+fT(new Date());
-    document.getElementById('offlineBadge').style.display='none';
-  }catch(e){
-    loadL();
-    document.getElementById('offlineBadge').style.display='inline';
-    document.getElementById('syncInfo').textContent='Офлайн · кэш '+(localStorage.getItem('lastSync')||'—');
+async function startApp() {
+  document.getElementById('scriptUrl').value = SCRIPT_URL;
+  if (SCRIPT_URL) {
+    await syncAll();
+  } else {
+    loadDemoData();
+    showToast('⚙ Введите URL Apps Script в настройках', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+async function init() {
+  if (currentUser) {
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SYNC
+// ═══════════════════════════════════════════════════════════
+async function syncAll() {
+  setSyncInfo('Синхронизация…');
+  try {
+    const res = await apiFetch('getAll');
+    if (!res.ok) throw new Error(res.error || 'Ошибка');
+    parts   = res.parts   || [];
+    stock   = res.stock   || [];
+    history = res.history || [];
+    rackMap = res.map     || defaultRackMap();
+    colors  = res.colors  || defaultColors();
+    // Merge server orders with local (server wins for status, keep local if not on server)
+    if (res.orders && res.orders.length) {
+      const serverIds = new Set(res.orders.map(o => o.id));
+      const localOnly = orders.filter(o => !serverIds.has(o.id));
+      orders = [...res.orders, ...localOnly];
+    }
+    saveLocal();
+    saveOrders();
+    setSyncInfo('Синхронизировано · ' + fmtTime(new Date()));
+    document.getElementById('offlineBadge').style.display = 'none';
+  } catch(e) {
+    loadLocal();
+    document.getElementById('offlineBadge').style.display = 'inline';
+    setSyncInfo('Офлайн · кэш ' + (localStorage.getItem('lastSync') || '—'));
   }
   rebuildAll();
 }
 
-function rebuildAll(){ buildCF(); buildColF(); renderStock(); renderMap(mapHL); renderOps(); renderHist(); renderAlerts(); renderOrders(); updateStats(); }
-
-function updateStats(){
-  var m=getMerged();
-  var crit=m.filter(function(i){return i.qty<=i.min_qty&&i.min_qty>0;}).length;
-  var zero=m.filter(function(i){return i.qty===0;}).length;
-  var pend=orders.filter(function(o){return o.status!=='done';}).length;
-  document.getElementById('sTot').textContent=m.length;
-  document.getElementById('sCrit').textContent=crit;
-  document.getElementById('sOps').textContent=opCount;
-  document.getElementById('sZero').textContent=zero;
-  document.getElementById('notifDot').style.display=(crit>0||pend>0)?'block':'none';
-  var ab=document.getElementById('aBadge'); ab.style.display=crit>0?'block':'none'; ab.textContent=crit;
-  var ob=document.getElementById('oBadge'); ob.style.display=pend>0?'block':'none'; ob.textContent=pend;
+function setSyncInfo(txt) {
+  document.getElementById('syncInfo').textContent = txt;
 }
 
-function getMerged(){
-  return stock.map(function(s){
-    var p=parts.find(function(x){return x.code===s.code;})||{};
-    return {code:s.code,name:s.name||p.name||s.code,category:p.category||'',color:s.color,
-      qty:s.qty,location:normLoc(s.location),
-      min_qty:p.min_qty||0,unit:p.unit||'шт.'};
+async function apiFetch(action, body) {
+  if (!SCRIPT_URL) throw new Error('No URL');
+  // Используем только GET чтобы избежать CORS preflight блокировки
+  let url = SCRIPT_URL + '?action=' + action;
+  if (body) url += '&payload=' + encodeURIComponent(JSON.stringify(body));
+  const r = await fetch(url, {method:'GET', redirect:'follow'});
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+function saveLocal() {
+  localStorage.setItem('w_parts',   JSON.stringify(parts));
+  localStorage.setItem('w_stock',   JSON.stringify(stock));
+  localStorage.setItem('w_history', JSON.stringify(history.slice(0,100)));
+  localStorage.setItem('w_map',     JSON.stringify(rackMap));
+  localStorage.setItem('w_colors',  JSON.stringify(colors));
+  localStorage.setItem('lastSync',  fmtTime(new Date()));
+}
+
+function loadLocal() {
+  parts   = JSON.parse(localStorage.getItem('w_parts')   || '[]');
+  stock   = JSON.parse(localStorage.getItem('w_stock')   || '[]');
+  history = JSON.parse(localStorage.getItem('w_history') || '[]');
+  rackMap = JSON.parse(localStorage.getItem('w_map')     || 'null') || defaultRackMap();
+  colors  = JSON.parse(localStorage.getItem('w_colors')  || 'null') || defaultColors();
+}
+
+function loadDemoData() {
+  rackMap = defaultRackMap();
+  colors  = defaultColors();
+  parts   = DEMO_PARTS;
+  stock   = DEMO_STOCK;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DEFAULTS
+// ═══════════════════════════════════════════════════════════
+function defaultRackMap() {
+  return [
+    {row:'A', sections:4,  tiers:4, length:'105 п/м', load:'1000 кг', description:'Ряд 1A'},
+    {row:'B', sections:3,  tiers:4, length:'105 п/м', load:'1000 кг', description:'Ряд 1B'},
+    {row:'C', sections:10, tiers:5, length:'280 п/м', load:'1000 кг', description:'Ряд 2 — набивные, стоевая'},
+    {row:'D', sections:13, tiers:7, length:'357 п/м', load:'550 кг',  description:'Ряд 3D — основной'},
+    {row:'E', sections:13, tiers:7, length:'357 п/м', load:'550 кг',  description:'Ряд 3E — основной'},
+    {row:'F', sections:11, tiers:6, length:'312 п/м', load:'550 кг',  description:'Ряд 4'},
+  ];
+}
+
+function defaultColors() {
+  return [
+    {name:'Белый',       hex:'#F8F8F8'},
+    {name:'Венге',       hex:'#3D2B1F'},
+    {name:'Орех',        hex:'#8B5E3C'},
+    {name:'Антрацит',    hex:'#4A4A55'},
+    {name:'Дуб сонома',  hex:'#C9A96E'},
+    {name:'Капучино',    hex:'#D4B896'},
+    {name:'Беленый дуб', hex:'#E8D5AA'},
+    {name:'Серый',       hex:'#9CA3AF'},
+  ];
+}
+
+// ═══════════════════════════════════════════════════════════
+//  REBUILD ALL UI
+// ═══════════════════════════════════════════════════════════
+function rebuildAll() {
+  buildCatFilters();
+  buildColorFilters();
+  renderStock();
+  renderMap(mapHighlight);
+  renderOps();
+  renderHistory();
+  renderAlerts();
+  renderOrders();
+  updateStats();
+}
+
+function updateStats() {
+  const merged  = getMergedStock();
+  const crit    = merged.filter(i => i.qty <= i.min_qty && i.min_qty > 0).length;
+  const zero    = merged.filter(i => i.qty === 0).length;
+  const pending = orders.filter(o => o.status !== 'done').length;
+  document.getElementById('sTot').textContent  = merged.length;
+  document.getElementById('sCrit').textContent = crit;
+  document.getElementById('sOps').textContent  = opCount;
+  document.getElementById('sZero').textContent = zero;
+  document.getElementById('notifDot').style.display = (crit > 0 || pending > 0) ? 'block' : 'none';
+  const ab = document.getElementById('alertTabBadge');
+  ab.style.display = crit > 0 ? 'block' : 'none';
+  ab.textContent = crit;
+  const ob = document.getElementById('orderTabBadge');
+  ob.style.display = pending > 0 ? 'block' : 'none';
+  ob.textContent = pending;
+}
+
+// Merge parts + stock into display items
+function getMergedStock() {
+  return stock.map(s => {
+    const p = parts.find(x => x.code === s.code && (!x.color || x.color === s.color)) ||
+              parts.find(x => x.code === s.code) || {};
+    return {
+      code:     s.code,
+      name:     s.name || p.name || s.code,   // name now stored in Остатки
+      category: p.category || '',
+      color:    s.color,
+      qty:      s.qty,
+      location: s.location,
+      min_qty:  p.min_qty || 0,
+      unit:     p.unit || 'шт.'
+    };
   });
 }
 
-function buildCF(){
-  var cats=['Все'].concat(Array.from(new Set(parts.map(function(p){return p.category;}).filter(Boolean))));
-  var mk=function(id){ return cats.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="setCat(\''+c+'\',this,\''+id+'\')">'+c+'</div>';}).join(''); };
-  document.getElementById('catFilters').innerHTML=mk('catFilters');
-  document.getElementById('opsFilters').innerHTML=mk('opsFilters');
+// ═══════════════════════════════════════════════════════════
+//  FILTERS
+// ═══════════════════════════════════════════════════════════
+function buildCatFilters() {
+  const cats = ['Все', ...new Set(parts.map(p => p.category).filter(Boolean))];
+  document.getElementById('catFilters').innerHTML = cats.map((c,i) =>
+    `<div class="fchip${i===0?' on':''}" onclick="setCat('${c}',this)">${c}</div>`
+  ).join('');
+
+  // ops filters too
+  document.getElementById('opsFilters').innerHTML = cats.map((c,i) =>
+    `<div class="fchip${i===0?' on':''}" onclick="setOpsCat('${c}',this)">${c}</div>`
+  ).join('');
 }
 
-function setCat(cat,el,fid){
-  if(fid==='catFilters') activeCat=cat==='Все'?null:cat;
-  else opsCat=cat==='Все'?null:cat;
-  document.querySelectorAll('#'+fid+' .chip').forEach(function(e){e.classList.remove('on');});
-  el.classList.add('on');
-  if(fid==='catFilters') renderStock(); else renderOps();
-}
+function buildColorFilters() {
+  const grid = document.getElementById('colorGrid');
+  if (!grid) return;
 
-function buildColF(){
-  var all=[{name:'Все',hex:''}].concat(clrs);
-  document.getElementById('colorDrop').innerHTML=all.map(function(c,i){
-    var bg=c.hex||'linear-gradient(135deg,#3b82f6,#a78bfa)';
-    var esc=c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return '<div class="ci'+(i===0?' on':'')+'" onclick="pickClr(\''+esc+'\',this)"><div class="ci-dot" style="background:'+bg+'"></div><div class="ci-name">'+c.name+'</div><div class="ci-check">✓</div></div>';
+  // «Все» — первый элемент
+  const allColors = [{name:'Все', hex:''},...colors];
+  grid.innerHTML = allColors.map((c, i) => {
+    const dot = c.hex
+      ? `<div class="cg-dot" style="background:${c.hex}"></div>`
+      : `<div class="cg-dot" style="background:linear-gradient(135deg,#3b82f6,#a78bfa)"></div>`;
+    return `<div class="cg-item${i===0?' on':''}" onclick="setColorGrid('${c.name}',this)">
+      ${dot}
+      <div class="cg-name">${c.name}</div>
+    </div>`;
   }).join('');
 }
 
-function toggleCDrop(){ var d=document.getElementById('colorDrop'),a=document.getElementById('cArr'); d.classList.toggle('open'); a.textContent=d.classList.contains('open')?'▲':'▼'; }
+function toggleColorGrid() {
+  const grid = document.getElementById('colorGrid');
+  const arrow = document.getElementById('colorToggleArrow');
+  grid.classList.toggle('open');
+  arrow.textContent = grid.classList.contains('open') ? '▲' : '▼';
+}
 
-function pickClr(name,el){
-  activeClr=name==='Все'?null:name;
-  document.querySelectorAll('#colorDrop .ci').forEach(function(e){e.classList.remove('on');}); el.classList.add('on');
-  var dot=document.getElementById('cDot'),lbl=document.getElementById('cLbl');
-  if(activeClr){ var c=clrs.find(function(x){return x.name===activeClr;}); dot.style.background=c?c.hex:'#888'; lbl.textContent=activeClr; }
-  else{ dot.style.background='linear-gradient(135deg,#3b82f6,#a78bfa)'; lbl.textContent='Все цвета'; }
-  document.getElementById('colorDrop').classList.remove('open'); document.getElementById('cArr').textContent='▼';
+function setColorGrid(color, el) {
+  activeColor = color === 'Все' ? null : color;
+  document.querySelectorAll('.cg-item').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+
+  // Обновить заголовок
+  const dot = document.getElementById('colorToggleDot');
+  const lbl = document.getElementById('colorToggleLabel');
+  if (activeColor) {
+    const c = colors.find(x => x.name === activeColor);
+    dot.style.background = c ? c.hex : '#888';
+    lbl.textContent = activeColor;
+  } else {
+    dot.style.background = 'linear-gradient(135deg,#3b82f6,#a78bfa)';
+    lbl.textContent = 'Все цвета';
+  }
+
+  // Закрыть грид после выбора
+  document.getElementById('colorGrid').classList.remove('open');
+  document.getElementById('colorToggleArrow').textContent = '▼';
   renderStock();
 }
 
-function getFiltered(){
-  var q=(document.getElementById('searchInput').value||'').toLowerCase();
-  return getMerged().filter(function(i){
-    var mQ=!q||i.name.toLowerCase().includes(q)||i.code.includes(q)||i.color.toLowerCase().includes(q)||i.location.toLowerCase().includes(q);
-    var mC=!activeCat||i.category.toUpperCase().includes(activeCat.toUpperCase());
-    var mCl=!activeClr||i.color===activeClr;
-    return mQ&&mC&&mCl;
+let opsCatFilter = null;
+function setCat(cat, el) {
+  activeCat = cat === 'Все' ? null : cat;
+  document.querySelectorAll('#catFilters .fchip').forEach(e => e.classList.remove('on'));
+  el.classList.add('on'); renderStock();
+}
+function setOpsCat(cat, el) {
+  opsCatFilter = cat === 'Все' ? null : cat;
+  document.querySelectorAll('#opsFilters .fchip').forEach(e => e.classList.remove('on'));
+  el.classList.add('on'); renderOps();
+}
+
+function colorHex(name) {
+  return (colors.find(c => c.name === name) || {}).hex || '#888';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STOCK
+// ═══════════════════════════════════════════════════════════
+function getFiltered() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
+  return getMergedStock().filter(item => {
+    const mQ = !q || item.name.toLowerCase().includes(q) || item.code.includes(q) || item.color.toLowerCase().includes(q) || item.location.toLowerCase().includes(q);
+    const mC = !activeCat   || item.category.toUpperCase().includes(activeCat.toUpperCase());
+    const mCol= !activeColor || item.color === activeColor;
+    return mQ && mC && mCol;
   });
 }
 
-function renderStock(){
-  var items=getFiltered(), el=document.getElementById('stockContent');
-  if(!items.length){el.innerHTML='<div class="empty">Ничего не найдено</div>';return;}
-  var crit=items.filter(function(i){return i.qty<=i.min_qty&&i.min_qty>0;});
-  var norm=items.filter(function(i){return i.qty>i.min_qty||i.min_qty===0;});
-  var h='';
-  if(crit.length) h+='<div class="slbl" style="color:var(--danger)">⚠ Критичный запас ('+crit.length+')</div><div class="ilist">'+crit.map(iCard).join('')+'</div>';
-  if(norm.length) h+='<div class="slbl">В наличии ('+norm.length+')</div><div class="ilist">'+norm.map(iCard).join('')+'</div>';
-  el.innerHTML=h;
+function renderStock() {
+  const items = getFiltered();
+  const el = document.getElementById('stockContent');
+  if (!items.length) { el.innerHTML = '<div class="empty-state">Ничего не найдено</div>'; return; }
+  const crit = items.filter(i => i.qty <= i.min_qty && i.min_qty > 0);
+  const norm = items.filter(i => i.qty > i.min_qty || i.min_qty === 0);
+  let html = '';
+  if (crit.length) html += `<div class="slbl" style="color:var(--danger)">⚠ Критичный запас (${crit.length})</div><div class="items-list">${crit.map(itemCard).join('')}</div>`;
+  if (norm.length) html += `<div class="slbl">В наличии (${norm.length})</div><div class="items-list">${norm.map(itemCard).join('')}</div>`;
+  el.innerHTML = html;
 }
 
-function iCard(item){
-  var isCrit=item.qty<=item.min_qty&&item.min_qty>0;
-  var isWarn=!isCrit&&item.qty<=item.min_qty*1.5&&item.min_qty>0;
-  var cls=isCrit?'ic-low':isWarn?'ic-warn':'ic-ok';
-  var qcls=isCrit?'low':isWarn?'warn':'';
-  var ico=catIco(item.category);
-  var dot='<span class="cdot" style="background:'+cH(item.color)+'"></span>';
-  var ec=item.color.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  return '<div class="icard" onclick="goToMap(\''+item.code+'\',\''+ec+'\')"><div class="iico '+cls+'">'+ico+'</div><div class="iinfo"><div class="iname">'+sN(item.name)+'</div><div class="imeta">'+dot+item.color+' · '+item.code+' · '+item.location+'</div></div><div class="iqty"><div class="iqty-v '+qcls+'">'+item.qty+'</div><div class="iunit">'+item.unit+'</div></div></div>';
+function itemCard(item) {
+  const isCrit = item.qty <= item.min_qty && item.min_qty > 0;
+  const isWarn = !isCrit && item.qty <= item.min_qty * 1.5 && item.min_qty > 0;
+  const cls = isCrit ? 'ic-low' : isWarn ? 'ic-warn' : 'ic-ok';
+  const qcls = isCrit ? 'low' : isWarn ? 'warn' : '';
+  const shortName = item.name.replace(/^[\w.]+\s/, '');
+  const dot = `<span class="cdot" style="background:${colorHex(item.color)}"></span>`;
+  return `<div class="item-card" onclick="goToMap('${item.code}','${item.color}')">
+    <div class="item-icon ${cls}">${catEmoji(item.category)}</div>
+    <div class="item-info">
+      <div class="item-name">${shortName}</div>
+      <div class="item-meta">${dot}${item.color} · ${item.code} · ${item.location}</div>
+    </div>
+    <div class="item-right">
+      <div class="item-qty ${qcls}">${item.qty}</div>
+      <div class="item-unit">${item.unit}</div>
+    </div>
+  </div>`;
 }
 
-function catIco(cat){ if(!cat)return '○'; if(cat.includes('СТОЕВАЯ'))return '▮'; if(cat.includes('ВЕРТИКАЛЬНАЯ'))return '⊢'; if(cat.includes('ГОРИЗОНТАЛЬНАЯ'))return '⊤'; if(cat.includes('ПЕРЕМЫЧКА'))return '⊣'; if(cat.includes('ФИЛЕНКА'))return '▣'; return '○'; }
+function catEmoji(cat) {
+  if (!cat) return '○';
+  if (cat.includes('СТОЕВАЯ')) return '▮';
+  if (cat.includes('ВЕРТИКАЛЬНАЯ')) return '⊢';
+  if (cat.includes('ГОРИЗОНТАЛЬНАЯ')) return '⊤';
+  if (cat.includes('ПЕРЕМЫЧКА')) return '⊣';
+  if (cat.includes('ФИЛЕНКА')) return '▣';
+  return '○';
+}
 
-function renderMap(hl){
-  mapHL=hl;
-  var el=document.getElementById('mapContent');
-  if(!rack.length){el.innerHTML='<div class="empty">Карта не загружена</div>';return;}
-  var idx={};
-  getMerged().forEach(function(i){if(i.location)idx[i.location]=i;});
-  var h='';
-  rack.forEach(function(rk){
-    var rid='rb-'+rk.row;
-    var slbls='<div class="slbls"><div class="slb" style="width:24px"></div>';
-    for(var s=1;s<=rk.sections;s++) slbls+='<div class="slb">С'+s+'</div>';
-    slbls+='</div>';
-    var rows='';
-    for(var t=rk.tiers;t>=0;t--){
-      var lbl=t===0?'Пол':'Я'+t;
-      var oper=t<=1;
-      rows+='<div class="trow"><div class="tlbl" style="'+(oper?'color:var(--ok)':'')+'">'+lbl+'</div><div class="cscroll">';
-      for(var s2=1;s2<=rk.sections;s2++){
-        var loc=rk.row+'-C'+s2+'-Y'+t;
-        var item=idx[loc];
-        var cls=t===0?'ground':'empty', lx='';
-        if(item){ var isHL=hl&&item.code===hl.code&&item.color===hl.color; if(isHL){cls='found';lx='★';} else if(item.qty<=item.min_qty&&item.min_qty>0){cls='crit';lx='!';} else{cls='occ';lx='●';} }
-        rows+='<div class="cell '+cls+'" data-loc="'+loc+'">'+lx+'</div>';
+// ═══════════════════════════════════════════════════════════
+//  MAP
+// ═══════════════════════════════════════════════════════════
+function renderMap(highlight) {
+  mapHighlight = highlight;
+  const el = document.getElementById('mapContent');
+  if (!rackMap.length) { el.innerHTML = '<div class="empty-state">Карта не загружена</div>'; return; }
+
+  // Build cell → stock lookup
+  const cellIndex = {};
+  getMergedStock().forEach(item => {
+    if (item.location) cellIndex[item.location] = item;
+  });
+
+  let html = '';
+  rackMap.forEach(rack => {
+    const tiers    = rack.tiers;
+    const sections = rack.sections;
+    const rowId    = 'row-' + rack.row;
+
+    // Section labels
+    let secLabels = '<div class="sec-labels">';
+    for (let s = 1; s <= sections; s++) secLabels += `<div class="sec-lbl">С${s}</div>`;
+    secLabels += '</div>';
+
+    // Tier rows (from top tier down to 0)
+    let tierRows = '';
+    for (let t = tiers; t >= 0; t--) {
+      const isGround = t === 0;
+      const tierLabel = isGround ? 'Пол' : `Я${t}`;
+      const isOper = t <= 1;
+      tierRows += `<div class="tier-row">
+        <div class="tier-lbl" style="${isOper?'color:var(--ok)':''}">${tierLabel}</div>
+        <div class="cells-scroll">`;
+      for (let s = 1; s <= sections; s++) {
+        const loc  = `${rack.row}-С${s}-Я${t}`;
+        const item = cellIndex[loc];
+        let cls = isGround ? 'ground' : 'empty';
+        let lbl = '';
+        if (item) {
+          const isHL = highlight && item.code === highlight.code && item.color === highlight.color;
+          if (isHL)                               { cls = 'found'; lbl = '★'; }
+          else if (item.qty <= item.min_qty && item.min_qty > 0) { cls = 'crit';  lbl = '!'; }
+          else                                    { cls = 'occ';   lbl = '●'; }
+        }
+        tierRows += `<div class="cell ${cls}" onclick="showCell('${loc}')" title="${loc}">${lbl}</div>`;
       }
-      rows+='</div></div>';
+      tierRows += '</div></div>';
     }
-    h+='<div class="rblock">'+
-      '<div class="rhdr" data-rack="'+rid+'">'+
-        '<div style="display:flex;align-items:center">'+
-          '<span class="rbadge">'+rk.row+'</span>'+
-          '<span class="rinfo">'+rk.description+' · '+rk.sections+'с · '+(rk.tiers+1)+'я · '+rk.load+'</span>'+
-        '</div>'+
-        '<span class="rchev" id="chev-'+rid+'">▼</span>'+
-      '</div>'+
-      '<div class="rbody" id="'+rid+'">'+slbls+rows+
-        '<div class="mleg">'+
-          '<div class="mleg-i"><div class="mleg-b" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4)"></div>Занято</div>'+
-          '<div class="mleg-i"><div class="mleg-b" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4)"></div>Критично</div>'+
-          '<div class="mleg-i"><div class="mleg-b" style="background:rgba(250,204,21,.3);border:1px solid #fbbf24"></div>Найдено</div>'+
-          '<div class="mleg-i" style="color:var(--ok)">Я0–Я1 = оперативное</div>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
-  });
-  el.innerHTML=h;
 
-  // Event delegation — no inline onclick with Cyrillic
-  el.addEventListener('click', function(e){
-    var cell = e.target.closest('.cell');
-    if(cell && cell.dataset.loc) { showCell(cell.dataset.loc); return; }
-    var hdr = e.target.closest('.rhdr');
-    if(hdr && hdr.dataset.rack) toggleRack(hdr.dataset.rack);
+    html += `<div class="row-block">
+      <div class="row-hdr" onclick="toggleRow('${rowId}')">
+        <div class="row-hdr-left">
+          <span class="row-badge">Ряд ${rack.row}</span>
+          <span class="row-info">${rack.description} · ${sections} секц. · ${tiers+1} яр. · ${rack.load}</span>
+        </div>
+        <span class="row-chevron" id="chev-${rowId}">▼</span>
+      </div>
+      <div class="row-body" id="${rowId}">
+        ${secLabels}${tierRows}
+        <div class="map-legend">
+          <div class="leg"><div class="leg-box" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4)"></div>Занято</div>
+          <div class="leg"><div class="leg-box" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4)"></div>Критично</div>
+          <div class="leg"><div class="leg-box" style="background:rgba(250,204,21,.3);border:1px solid #fbbf24"></div>Найдено</div>
+          <div class="leg"><div class="leg-box" style="background:rgba(120,200,80,.1);border:1px solid rgba(120,200,80,.3)"></div>Пол (Я0)</div>
+          <div class="leg" style="color:var(--ok)">Я0–Я1 = оперативное хранение</div>
+        </div>
+      </div>
+    </div>`;
   });
+  el.innerHTML = html;
 
-  if(hl){
-    var found=getMerged().find(function(i){return i.code===hl.code&&i.color===hl.color;});
-    if(found&&found.location) openRack('rb-'+found.location.split('-')[0]);
+  // Auto-open the row that has the highlight
+  if (highlight) {
+    const item = getMergedStock().find(i => i.code === highlight.code && i.color === highlight.color);
+    if (item && item.location) {
+      const rowLetter = item.location.split('-')[0];
+      openRow('row-' + rowLetter);
+    }
   }
 }
 
-function toggleRack(id){ var b=document.getElementById(id),c=document.getElementById('chev-'+id); if(!b)return; b.classList.toggle('open'); if(c)c.classList.toggle('open'); }
-function openRack(id){ var b=document.getElementById(id),c=document.getElementById('chev-'+id); if(b)b.classList.add('open'); if(c)c.classList.add('open'); }
-
-function dispLoc(loc){
-  // Показываем красиво: C→С, Y→Я
-  if(!loc) return '';
-  return loc.replace(/C(\d)/g,'С$1').replace(/Y(\d)/g,'Я$1');
+function toggleRow(id) {
+  const body = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+function openRow(id) {
+  const body = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id);
+  if (body) { body.classList.add('open'); chev && chev.classList.add('open'); }
 }
 
-function showCell(loc){
-  var item=getMerged().find(function(i){return i.location===loc;});
-  var el=document.getElementById('cellPop');
-  var t=parseInt((loc.split('-')[2]||'Y0').replace('Y',''));
-  var oper=t<=1;
-  var dLoc=dispLoc(loc);
-  if(!item){
-    el.innerHTML='<div class="cpop-title">Свободно</div><div class="cpop-loc">'+dLoc+(oper?' · 🟢 оперативная зона':'')+'</div>';
-  }else{
-    var isCrit=item.qty<=item.min_qty&&item.min_qty>0;
-    var ec=item.color.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    var eloc=loc.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    el.innerHTML='<div class="cpop-title">'+sN(item.name)+'</div>'+
-      '<div class="cpop-loc">'+dLoc+(oper?' · 🟢 оперативная':'')+'</div>'+
-      '<div class="cpop-grid">'+
-        '<div class="cpop-item"><div class="cpop-lbl">Артикул</div><div class="cpop-val">'+item.code+'</div></div>'+
-        '<div class="cpop-item"><div class="cpop-lbl">Цвет</div><div class="cpop-val"><span class="cdot" style="background:'+cH(item.color)+'"></span>'+item.color+'</div></div>'+
-        '<div class="cpop-item"><div class="cpop-lbl">Остаток</div><div class="cpop-val" style="color:'+(isCrit?'var(--danger)':'var(--ok)')+'">'+item.qty+' '+item.unit+'</div></div>'+
-        '<div class="cpop-item"><div class="cpop-lbl">Мин.запас</div><div class="cpop-val">'+item.min_qty+' '+item.unit+'</div></div>'+
-      '</div>'+
-      '<div class="cpop-btns">'+
-        '<button class="cpbtn in" data-op="in" data-code="'+item.code+'" data-color="'+item.color+'" onclick="openOp(\'in\',this.dataset.code,this.dataset.color)">+ Принять</button>'+
-        '<button class="cpbtn out" data-op="out" data-code="'+item.code+'" data-color="'+item.color+'" onclick="openOp(\'out\',this.dataset.code,this.dataset.color)">− Выдать</button>'+
-        '<button class="cpbtn mv" data-code="'+item.code+'" data-color="'+item.color+'" data-loc="'+loc+'" onclick="openMv(this.dataset.code,this.dataset.color,this.dataset.loc)">↔ Переместить</button>'+
-      '</div>';
+function showCell(loc) {
+  const merged = getMergedStock();
+  const item = merged.find(i => i.location === loc);
+  const el = document.getElementById('cellPopup');
+  const parts_loc = loc.split('-');
+  const rowLetter = parts_loc[0];
+  const rack = rackMap.find(r => r.row === rowLetter) || {};
+  const tierNum = parseInt((parts_loc[2] || 'Я0').replace('Я', ''));
+  const isOper  = tierNum <= 1;
+
+  if (!item) {
+    el.innerHTML = `<div class="popup-title">Ячейка свободна</div>
+      <div class="popup-loc">${loc} ${isOper ? '· 🟢 оперативная зона' : ''}</div>`;
+  } else {
+    const isCrit = item.qty <= item.min_qty && item.min_qty > 0;
+    el.innerHTML = `<div class="popup-title">${item.name.replace(/^[\w.]+\s/, '')}</div>
+      <div class="popup-loc">${loc} ${isOper ? '· 🟢 оперативная зона' : ''}</div>
+      <div class="popup-grid">
+        <div class="popup-item"><div class="popup-lbl">Артикул</div><div class="popup-val">${item.code}</div></div>
+        <div class="popup-item"><div class="popup-lbl">Цвет</div><div class="popup-val"><span class="cdot" style="background:${colorHex(item.color)}"></span>${item.color}</div></div>
+        <div class="popup-item"><div class="popup-lbl">Остаток</div><div class="popup-val" style="color:${isCrit?'var(--danger)':'var(--ok)'}">${item.qty} ${item.unit}</div></div>
+        <div class="popup-item"><div class="popup-lbl">Мин. запас</div><div class="popup-val">${item.min_qty} ${item.unit}</div></div>
+      </div>
+      <div class="popup-btns">
+        <button class="pbtn in"   onclick="openOp('in','${item.code}','${item.color}')">+ Принять</button>
+        <button class="pbtn out"  onclick="openOp('out','${item.code}','${item.color}')">− Выдать</button>
+        <button class="pbtn move" onclick="openMove('${item.code}','${item.color}','${item.location}')">↔ Переместить</button>
+      </div>`;
   }
-  el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-function doMapSearch(){
-  var q=document.getElementById('mapSrch').value.toLowerCase();
-  document.getElementById('cellPop').classList.remove('show');
-  if(!q){renderMap(null);return;}
-  var f=getMerged().find(function(i){return i.name.toLowerCase().includes(q)||i.code.includes(q)||i.color.toLowerCase().includes(q);});
-  renderMap(f?{code:f.code,color:f.color}:null);
+function doMapSearch() {
+  const q = document.getElementById('mapSearch').value.toLowerCase();
+  document.getElementById('cellPopup').classList.remove('show');
+  if (!q) { renderMap(null); return; }
+  const found = getMergedStock().find(i =>
+    i.name.toLowerCase().includes(q) || i.code.includes(q) || i.color.toLowerCase().includes(q)
+  );
+  renderMap(found ? {code: found.code, color: found.color} : null);
 }
 
-function goToMap(code,color){
-  switchTab('map',document.querySelectorAll('.tab')[1]);
-  renderMap({code:code,color:color});
-  setTimeout(function(){var i=getMerged().find(function(x){return x.code===code&&x.color===color;});if(i)showCell(i.location);},150);
+function goToMap(code, color) {
+  switchTab('map', document.querySelectorAll('.tab')[1]);
+  renderMap({code, color});
+  const item = getMergedStock().find(i => i.code === code && i.color === color);
+  if (item) setTimeout(() => showCell(item.location), 150);
 }
 
-function renderOps(){
-  var q=(document.getElementById('opsSrch').value||'').toLowerCase();
-  var items=getMerged().filter(function(i){return(!q||i.name.toLowerCase().includes(q)||i.code.includes(q))&&(!opsCat||i.category.toUpperCase().includes(opsCat.toUpperCase()));});
-  var el=document.getElementById('opsContent');
-  if(!items.length){el.innerHTML='<div class="empty">Ничего не найдено</div>';return;}
-  el.innerHTML='<div class="ilist">'+items.slice(0,80).map(function(item){
-    var dot='<span class="cdot" style="background:'+cH(item.color)+'"></span>';
-    var ec=item.color.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return '<div class="icard" style="flex-wrap:wrap;gap:8px"><div class="iico '+(item.qty<=item.min_qty&&item.min_qty>0?'ic-low':'ic-ok')+'">'+catIco(item.category)+'</div><div class="iinfo" style="min-width:100px"><div class="iname">'+sN(item.name)+'</div><div class="imeta">'+dot+item.color+' · '+item.code+' · '+item.qty+' '+item.unit+'</div></div><div style="display:flex;gap:5px;flex-shrink:0"><button onclick="openOp(\'in\',\''+item.code+'\',\''+ec+'\')" style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;touch-action:manipulation">+ Принять</button><button onclick="openOp(\'out\',\''+item.code+'\',\''+ec+'\')" style="background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;touch-action:manipulation">− Выдать</button></div></div>';
-  }).join('')+'</div>';
+// ═══════════════════════════════════════════════════════════
+//  OPERATIONS
+// ═══════════════════════════════════════════════════════════
+function renderOps() {
+  const q = (document.getElementById('opsSearch').value || '').toLowerCase();
+  const items = getMergedStock().filter(i =>
+    (!q || i.name.toLowerCase().includes(q) || i.code.includes(q)) &&
+    (!opsCatFilter || i.category.toUpperCase().includes(opsCatFilter.toUpperCase()))
+  );
+  const el = document.getElementById('opsContent');
+  if (!items.length) { el.innerHTML = '<div class="empty-state">Ничего не найдено</div>'; return; }
+
+  el.innerHTML = '<div class="items-list">' + items.slice(0, 80).map(item => {
+    const dot = `<span class="cdot" style="background:${colorHex(item.color)}"></span>`;
+    const shortName = item.name.replace(/^[\w.]+\s/, '');
+    return `<div class="item-card" style="flex-wrap:wrap;gap:8px">
+      <div class="item-icon ${item.qty <= item.min_qty ? 'ic-low' : 'ic-ok'}">${catEmoji(item.category)}</div>
+      <div class="item-info" style="min-width:120px">
+        <div class="item-name">${shortName}</div>
+        <div class="item-meta">${dot}${item.color} · ${item.code} · ${item.qty} ${item.unit}</div>
+      </div>
+      <div style="display:flex;gap:5px;flex-shrink:0">
+        <button onclick="openOp('in','${item.code}','${item.color}')"  style="background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">+ Принять</button>
+        <button onclick="openOp('out','${item.code}','${item.color}')" style="background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">− Выдать</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
 }
 
-function openOp(type,code,color){
-  curOp=type; var p=parts.find(function(x){return x.code===code;})||{};
-  curSt=stock.find(function(s){return s.code===code&&s.color===color;})||{code:code,color:color,qty:0,location:'',name:p.name||''};
-  document.getElementById('opTitle').textContent=type==='in'?'Приёмка':'Выдача';
-  document.getElementById('opSub').textContent=type==='in'?'Добавить на склад':'На складе: '+curSt.qty+' шт.';
-  document.getElementById('opName').textContent=sN(curSt.name||p.name||code);
-  document.getElementById('opCode').textContent=code+' · '+(curSt.location||'—');
-  document.getElementById('opColor').innerHTML=clrs.map(function(c){return '<option value="'+c.name+'" '+(c.name===color?'selected':'')+'>'+c.name+'</option>';}).join('');
-  document.getElementById('opQty').value=''; document.getElementById('opDoc').value='';
-  var btn=document.getElementById('opConfirm'); btn.className='mbtn '+(type==='in'?'ok-in':'ok-out'); btn.textContent=type==='in'?'Принять':'Выдать';
+// ═══════════════════════════════════════════════════════════
+//  OPERATION MODAL
+// ═══════════════════════════════════════════════════════════
+function openOp(type, code, colorPreset) {
+  currentOp = type;
+  const part  = parts.find(p => p.code === code) || {};
+  const sItem = stock.find(s => s.code === code && s.color === (colorPreset || ''));
+  currentStock = sItem || {code, color: colorPreset, qty: 0, location: ''};
+
+  document.getElementById('modalTitle').textContent = type === 'in' ? 'Приёмка товара' : 'Выдача товара';
+  document.getElementById('modalSub').textContent   = type === 'in' ? 'Добавить на склад' : `На складе: ${currentStock.qty || 0} шт.`;
+  document.getElementById('modalItemName').textContent = (part.name || code).replace(/^[\w.]+\s/, '');
+  document.getElementById('modalItemCode').textContent = code + ' · ' + (currentStock.location || '—');
+
+  // Color select
+  const sel = document.getElementById('modalColor');
+  sel.innerHTML = colors.map(c =>
+    `<option value="${c.name}" ${c.name === colorPreset ? 'selected' : ''}>${c.name}</option>`
+  ).join('');
+
+  document.getElementById('modalQty').value = '';
+  document.getElementById('modalDoc').value = '';
+  const btn = document.getElementById('modalConfirm');
+  btn.className = 'mbtn ' + (type === 'in' ? 'ok-in' : 'ok-out');
+  btn.textContent = type === 'in' ? 'Принять' : 'Выдать';
   document.getElementById('opModal').classList.add('show');
 }
 
-async function confirmOp(){
-  var qty=parseInt(document.getElementById('opQty').value)||0;
-  var color=document.getElementById('opColor').value;
-  var doc=document.getElementById('opDoc').value||'—';
-  if(qty<=0){toast('Введите количество','err');return;}
-  var si=stock.find(function(s){return s.code===curSt.code&&s.color===color;});
-  if(curOp==='out'&&(!si||si.qty<qty)){toast('Недостаточно на складе!','err');return;}
-  var pName=curSt.name||(parts.find(function(p){return p.code===curSt.code;})||{}).name||'';
-  closeModal('opModal'); toast('Отправка…','ok');
-  try{
-    var res=await api('addOperation',{type:curOp,code:curSt.code,name:pName,color:color,qty:qty,doc:doc,location:curSt.location,user:'Кладовщик'});
-    if(res.ok){
-      var idx=stock.findIndex(function(s){return s.code===curSt.code&&s.color===color;});
-      if(idx>=0) stock[idx].qty+=curOp==='in'?qty:-qty;
-      else if(curOp==='in') stock.push({code:curSt.code,name:pName,color:color,qty:qty,location:curSt.location});
-      var now=new Date();
-      hist.unshift({date:fD(now),time:fT(now),type:curOp,code:curSt.code,name:pName,color:color,qty:qty,doc:doc,location:curSt.location,user:'Кладовщик'});
-      opCount++; saveL(); rebuildAll();
-      toast(curOp==='in'?'+'+qty+' принято ✓':'-'+qty+' выдано ✓','ok');
-    }else{ toast('Ошибка: '+(res.error||'неизвестная'),'err'); }
-  }catch(e){ toast('Нет связи с сервером','err'); }
-}
+async function confirmOp() {
+  const qty   = parseInt(document.getElementById('modalQty').value) || 0;
+  const color = document.getElementById('modalColor').value;
+  const doc   = document.getElementById('modalDoc').value || '—';
+  if (qty <= 0) { showToast('Введите количество', 'err'); return; }
 
-function openMv(code,color,loc){
-  curMv={code:code,color:color,location:loc};
-  var p=parts.find(function(x){return x.code===code;})||{};
-  document.getElementById('mvName').textContent=sN(p.name||code);
-  document.getElementById('mvCode').textContent=code+' · '+color;
-  document.getElementById('mvCur').value=loc; document.getElementById('mvNew').value='';
-  document.getElementById('mvModal').classList.add('show');
-}
-
-async function confirmMove(){
-  var nl=document.getElementById('mvNew').value.trim();
-  if(!nl){toast('Введите ячейку','err');return;}
-  closeModal('mvModal'); document.getElementById('cellPop').classList.remove('show');
-  try{
-    var res=await api('updateCell',{code:curMv.code,color:curMv.color,newLocation:nl});
-    if(res.ok){
-      var idx=stock.findIndex(function(s){return s.code===curMv.code&&s.color===curMv.color;});
-      if(idx>=0) stock[idx].location=nl;
-      hist.unshift({date:fD(new Date()),time:fT(new Date()),type:'move',code:curMv.code,name:'',color:curMv.color,qty:0,doc:curMv.location+' → '+nl,location:nl,user:'Кладовщик'});
-      saveL(); rebuildAll(); toast('Перемещено → '+nl+' ✓','ok');
-    }else{ toast('Ошибка: '+(res.error||''),'err'); }
-  }catch(e){ toast('Нет связи','err'); }
-}
-
-function renderHist(){
-  var el=document.getElementById('histContent');
-  if(!hist.length){el.innerHTML='<div class="empty">Операций ещё не было</div>';return;}
-  var icons={in:'+ Приёмка',out:'− Выдача',move:'↔ Перемещение'};
-  el.innerHTML=hist.slice(0,100).map(function(h){
-    var n=h.name||(parts.find(function(p){return p.code===h.code;})||{}).name||h.code||'—';
-    var dot=h.color?'<span class="cdot" style="background:'+cH(h.color)+'"></span>':'';
-    var qStr=h.qty?(h.type==='in'?' · +':' · -')+h.qty+' шт.':'';
-    return '<div class="hitem"><div class="hline '+(h.type==='move'?'move':h.type)+'"></div><div class="hbody"><div class="hact">'+(icons[h.type]||h.type)+': '+sN(n)+'</div><div class="hdet">'+dot+(h.color||'')+qStr+(h.location?' · '+h.location:'')+'<br>Документ: '+(h.doc||'—')+'</div></div><div class="htime">'+h.time+'<br><span style="font-size:9px">'+h.date+'</span></div></div>';
-  }).join('');
-}
-
-function renderAlerts(){
-  var crit=getMerged().filter(function(i){return i.qty<=i.min_qty&&i.min_qty>0;});
-  var el=document.getElementById('alertsContent');
-  if(!crit.length){el.innerHTML='<div class="empty">Критичных позиций нет ✓</div>';return;}
-  el.innerHTML=crit.map(function(i){return '<div class="acard"><div style="font-size:18px">⚠</div><div class="abody"><div class="aname">'+sN(i.name)+'</div><div class="ameta"><span class="cdot" style="background:'+cH(i.color)+'"></span>'+i.color+' · '+i.code+' · '+i.location+'</div><div class="ameta" style="margin-top:4px">Мин.запас: '+i.min_qty+' '+i.unit+'</div></div><div class="aqty"><div class="anum">'+i.qty+'</div><div style="font-size:9px;color:var(--muted)">'+i.unit+'</div></div></div>';}).join('');
-}
-
-async function exportAlerts(){
-  var crit=getMerged().filter(function(i){return i.qty<=i.min_qty&&i.min_qty>0;});
-  if(!crit.length){toast('Критичных позиций нет','ok');return;}
-  toast('Экспорт…','ok');
-  try{
-    var res=await api('exportAlerts',{items:crit.map(function(i){return {code:i.code,name:i.name,color:i.color,qty:i.qty,min_qty:i.min_qty,location:i.location,unit:i.unit};}),date:fD(new Date())});
-    if(res.ok) toast('✓ '+crit.length+' позиций → "Заказ поставщику"','ok');
-    else toast('Ошибка: '+res.error,'err');
-  }catch(e){toast('Нет связи','err');}
-}
-
-function renderOrders(){
-  var el=document.getElementById('ordersList');
-  if(!orders.length){el.innerHTML='<div class="empty">Заказов нет.<br>Нажмите «+ Новый»</div>';return;}
-  var pend=orders.filter(function(o){return o.status!=='done';});
-  var done=orders.filter(function(o){return o.status==='done';}).slice(0,10);
-  var h='';
-  if(pend.length) h+='<div class="slbl">Ожидают выдачи ('+pend.length+')</div>'+pend.map(oCard).join('');
-  if(done.length) h+='<div class="slbl">Выданные</div>'+done.map(oCard).join('');
-  el.innerHTML=h;
-}
-
-function oCard(o){
-  var sl={new:'Ожидает',partial:'Частично',done:'Выдан'}[o.status]||o.status;
-  var sc={new:'st-new',partial:'st-part',done:'st-done'}[o.status]||'st-new';
-  var lines=o.lines.map(function(l,li){
-    var p=parts.find(function(x){return x.code===l.code;})||{};
-    var inSt=(stock.find(function(s){return s.code===l.code&&s.color===l.color;})||{}).qty||0;
-    var ok=inSt>=l.qty;
-    return '<div class="oline"><div class="ocheck '+(l.issued?'done':'')+'" onclick="toggleLine(\''+o.id+'\','+li+')">'+(l.issued?'✓':'')+'</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:'+(l.issued?'var(--muted)':'var(--text)')+'">'+sN(p.name||l.code)+'</div><div style="font-size:10px;color:var(--muted)"><span class="cdot" style="background:'+cH(l.color)+'"></span>'+l.color+(l.location?' · <b style="color:var(--accent)">'+l.location+'</b>':'')+' · склад: <span style="color:'+(ok?'var(--ok)':'var(--danger)')+'">'+inSt+'</span></div></div><div style="font-size:13px;font-weight:700;color:var(--text);flex-shrink:0">×'+l.qty+'</div></div>';
-  }).join('');
-  return '<div class="ocard"><div class="ohdr" onclick="toggleOC(\'ob-'+o.id+'\')"><div><div style="font-size:13px;font-weight:600;color:#fff">Заказ №'+o.num+' · '+o.master+'</div><div style="font-size:10px;color:var(--muted)">'+(o.comment||'')+' · '+o.time+' '+o.date+'</div></div><span class="ostatus '+sc+'">'+sl+'</span></div>'+(o.status!=='done'?'<div class="obody" id="ob-'+o.id+'" style="display:'+(o.status==='new'?'block':'none')+'">'+lines+'<button class="ofbtn" onclick="openFF(\''+o.id+'\')">Выдать по заказу</button></div>':'')+' </div>';
-}
-
-function toggleOC(id){ var el=document.getElementById(id); if(el) el.style.display=el.style.display==='none'?'block':'none'; }
-
-function openNewOrder(){ olN=0; document.getElementById('oMaster').value=''; document.getElementById('oComment').value=''; document.getElementById('oLines').innerHTML=''; addOLine(); document.getElementById('ordModal').classList.add('show'); }
-
-function addOLine(){
-  olN++;
-  var id='ol-'+olN;
-  var pO=parts.map(function(p){return '<option value="'+p.code+'">'+sN(p.name)+' ('+p.code+')</option>';}).join('');
-  var cO=clrs.map(function(c){return '<option value="'+c.name+'">'+c.name+'</option>';}).join('');
-  var row=document.createElement('div'); row.className='ol-row'; row.id=id;
-  row.innerHTML='<button class="ol-rm" onclick="document.getElementById(\''+id+'\').remove()">×</button><div class="ol-grid"><div><div class="flbl">Деталь</div><select class="finput" id="'+id+'-code" style="margin-bottom:0;font-size:12px">'+pO+'</select></div><div><div class="flbl">Цвет</div><select class="finput" id="'+id+'-color" style="margin-bottom:0;font-size:12px">'+cO+'</select></div></div><div class="ol-r2"><div class="flbl" style="margin:0;white-space:nowrap">Кол-во:</div><input class="finput" type="number" id="'+id+'-qty" value="1" min="1"><div class="flbl" style="margin:0;white-space:nowrap">Ячейка:</div><input class="finput" type="text" id="'+id+'-loc" placeholder="D-С5-Я3"></div>';
-  document.getElementById('oLines').appendChild(row);
-}
-
-async function submitOrder(){
-  var master=document.getElementById('oMaster').value.trim();
-  var comment=document.getElementById('oComment').value.trim();
-  if(!master){toast('Введите имя мастера','err');return;}
-  var rows=document.querySelectorAll('#oLines .ol-row');
-  if(!rows.length){toast('Добавьте позицию','err');return;}
-  var lines=[]; rows.forEach(function(row){ var id=row.id; lines.push({code:document.getElementById(id+'-code').value,color:document.getElementById(id+'-color').value,qty:parseInt(document.getElementById(id+'-qty').value)||1,location:document.getElementById(id+'-loc').value.trim(),issued:false}); });
-  var now=new Date();
-  var order={id:Date.now().toString(),num:orders.length+1,master:master,comment:comment,lines:lines,status:'new',date:fD(now),time:fT(now)};
-  orders.unshift(order); saveOrds(); closeModal('ordModal'); renderOrders(); toast('Заказ №'+order.num+' создан ✓','ok');
-  try{ var res=await api('addOrder',order); if(!res.ok) toast('Не сохранён в таблице','err'); }catch(e){toast('Только локально (нет связи)','err');}
-}
-
-function toggleLine(oid,li){
-  var o=orders.find(function(x){return x.id===oid;}); if(!o||o.status==='done') return;
-  o.lines[li].issued=!o.lines[li].issued;
-  var allD=o.lines.every(function(l){return l.issued;}), anyD=o.lines.some(function(l){return l.issued;});
-  o.status=allD?'done':anyD?'partial':'new';
-  saveOrds(); renderOrders(); api('updateOrder',{id:o.id,status:o.status,lines:o.lines}).catch(function(){});
-}
-
-function openFF(oid){
-  curFF=orders.find(function(o){return o.id===oid;}); if(!curFF) return;
-  document.getElementById('ffTitle').textContent='Заказ №'+curFF.num;
-  document.getElementById('ffSub').textContent=curFF.master+' · '+(curFF.comment||'');
-  var h=curFF.lines.filter(function(l){return !l.issued;}).map(function(l){
-    var p=parts.find(function(x){return x.code===l.code;})||{};
-    var inSt=(stock.find(function(s){return s.code===l.code&&s.color===l.color;})||{}).qty||0;
-    var ok=inSt>=l.qty;
-    return '<div style="background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid '+(ok?'var(--border)':'rgba(239,68,68,.3)')+'"><div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px">'+sN(p.name||l.code)+'</div><div style="display:flex;justify-content:space-between;font-size:11px;flex-wrap:wrap;gap:4px"><span><span class="cdot" style="background:'+cH(l.color)+'"></span>'+l.color+(l.location?' · <b style="color:var(--accent)">'+l.location+'</b>':'')+'</span><span>Нужно: <b>'+l.qty+'</b> · Склад: <b style="color:'+(ok?'var(--ok)':'var(--danger)')+'">'+inSt+'</b></span></div>'+(!ok?'<div style="font-size:10px;color:var(--danger);margin-top:4px">⚠ Недостаточно!</div>':'')+' </div>';
-  }).join('');
-  document.getElementById('ffLines').innerHTML=h||'<div style="color:var(--ok);text-align:center;padding:16px">Все позиции уже выданы ✓</div>';
-  document.getElementById('ffModal').classList.add('show');
-}
-
-async function fulfillAll(){
-  if(!curFF) return; closeModal('ffModal'); toast('Выдача…','ok');
-  var now=new Date(), anyOk=false, anyErr=false;
-  for(var i=0;i<curFF.lines.length;i++){
-    var l=curFF.lines[i]; if(l.issued) continue;
-    var si=stock.find(function(s){return s.code===l.code&&s.color===l.color;});
-    if(!si||si.qty<l.qty){anyErr=true;continue;}
-    try{
-      var pName=(parts.find(function(p){return p.code===l.code;})||{}).name||l.code;
-      var res=await api('addOperation',{type:'out',code:l.code,name:pName,color:l.color,qty:l.qty,doc:'Заказ №'+curFF.num+' · '+curFF.master,location:si.location,user:'Кладовщик'});
-      if(res.ok){ si.qty-=l.qty; l.issued=true; hist.unshift({date:fD(now),time:fT(now),type:'out',code:l.code,name:pName,color:l.color,qty:l.qty,doc:'Заказ №'+curFF.num+' · '+curFF.master,location:si.location,user:'Кладовщик'}); opCount++; anyOk=true; }
-      else anyErr=true;
-    }catch(e){anyErr=true;}
+  const sIdx = stock.findIndex(s => s.code === currentStock.code && s.color === color);
+  if (currentOp === 'out') {
+    const cur = sIdx >= 0 ? stock[sIdx].qty : 0;
+    if (qty > cur) { showToast('Недостаточно на складе!', 'err'); return; }
   }
-  var allD=curFF.lines.every(function(l){return l.issued;}), anyD=curFF.lines.some(function(l){return l.issued;});
-  curFF.status=allD?'done':anyD?'partial':'new';
-  saveOrds(); saveL(); rebuildAll();
-  try{await api('updateOrder',{id:curFF.id,status:curFF.status,lines:curFF.lines});}catch(e){}
-  if(!anyOk) toast('Ошибка — ничего не выдано','err');
-  else if(anyErr) toast('Часть не выдана — недостаточно','err');
-  else toast('Заказ №'+curFF.num+' выдан ✓','ok');
+
+  // Update local immediately
+  if (sIdx >= 0) {
+    stock[sIdx].qty += currentOp === 'in' ? qty : -qty;
+  } else if (currentOp === 'in') {
+    stock.push({code: currentStock.code, color, qty, location: currentStock.location});
+  }
+
+  const now = new Date();
+  history.unshift({
+    date: fmtDate(now), time: fmtTime(now),
+    type: currentOp, code: currentStock.code,
+    color, qty, doc, location: currentStock.location, user: 'Кладовщик'
+  });
+  opCount++;
+  closeModal('opModal');
+  rebuildAll();
+
+  // Sync to server
+  try {
+    const res = await apiFetch('addOperation', {
+      type: currentOp, code: currentStock.code,
+      name: currentStock.name || (parts.find(p=>p.code===currentStock.code)||{}).name || '',
+      color, qty, doc,
+      location: currentStock.location, user: currentUser ? currentUser.name : 'Кладовщик'
+    });
+    if (res.ok) {
+      showToast(currentOp === 'in' ? `+${qty} принято ✓` : `-${qty} выдано ✓`, 'ok');
+      saveLocal();
+    } else {
+      showToast('Ошибка сервера: ' + res.error, 'err');
+    }
+  } catch(e) {
+    showToast('Сохранено локально (офлайн)', 'err');
+  }
 }
 
-function openSettings(){ document.getElementById('stUrl').value=SCRIPT_URL; document.getElementById('connOk').style.display='none'; document.getElementById('connErr').style.display='none'; document.getElementById('stModal').classList.add('show'); }
-function saveUrl(){ SCRIPT_URL=document.getElementById('stUrl').value.trim(); localStorage.setItem('warehouseScriptUrl',SCRIPT_URL); toast('URL сохранён','ok'); }
-async function testConn(){
-  var ok=document.getElementById('connOk'),err=document.getElementById('connErr');
-  ok.style.display='none'; err.style.display='none';
-  try{ var res=await api('getColors'); if(res.ok){ok.textContent='✓ Соединение! Цветов: '+res.data.length; ok.style.display='block';} else throw new Error(res.error); }
-  catch(e){err.textContent='✗ Ошибка: '+e.message; err.style.display='block';}
+// ═══════════════════════════════════════════════════════════
+//  MOVE MODAL
+// ═══════════════════════════════════════════════════════════
+function openMove(code, color, loc) {
+  moveStock = {code, color, location: loc};
+  document.getElementById('moveItemName').textContent = (parts.find(p=>p.code===code)||{}).name || code;
+  document.getElementById('moveItemCode').textContent = code + ' · ' + color;
+  document.getElementById('moveCurrent').value = loc;
+  document.getElementById('moveNew').value = '';
+  document.getElementById('moveModal').classList.add('show');
 }
 
-syncAll();
+async function confirmMove() {
+  const newLoc = document.getElementById('moveNew').value.trim();
+  if (!newLoc) { showToast('Введите новую ячейку', 'err'); return; }
+
+  const idx = stock.findIndex(s => s.code === moveStock.code && s.color === moveStock.color);
+  if (idx >= 0) stock[idx].location = newLoc;
+
+  history.unshift({
+    date: fmtDate(new Date()), time: fmtTime(new Date()),
+    type: 'move', code: moveStock.code, color: moveStock.color,
+    qty: 0, doc: `${moveStock.location} → ${newLoc}`, location: newLoc, user: 'Кладовщик'
+  });
+  closeModal('moveModal');
+  document.getElementById('cellPopup').classList.remove('show');
+  rebuildAll();
+
+  try {
+    await apiFetch('updateCell', {code: moveStock.code, color: moveStock.color, newLocation: newLoc});
+    showToast(`Перемещено → ${newLoc} ✓`, 'ok');
+    saveLocal();
+  } catch(e) {
+    showToast('Сохранено локально', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HISTORY
+// ═══════════════════════════════════════════════════════════
+function renderHistory() {
+  const el = document.getElementById('histContent');
+  if (!history.length) { el.innerHTML = '<div class="empty-state">Операций ещё не было</div>'; return; }
+  el.innerHTML = history.slice(0, 100).map(h => {
+    const icons = {in:'+ Приёмка', out:'− Выдача', move:'↔ Перемещение', order:'📋 Заказ'};
+    const dot   = h.color ? `<span class="cdot" style="background:${colorHex(h.color)}"></span>` : '';
+    // Берём имя из самой записи истории, или из parts, или просто код
+    const rawName = h.name ||
+      ((parts.find(p => p.code === h.code) || {}).name) ||
+      h.code || '—';
+    const partName = rawName.replace(/^[\w.]+\s/, '');
+    const qtyStr = h.qty ? ' · ' + (h.type==='in'?'+':h.type==='out'?'-':'') + h.qty + ' шт.' : '';
+    return `<div class="hist-item">
+      <div class="hist-line ${h.type === 'order' || h.type === 'move' ? 'move' : h.type}"></div>
+      <div class="hist-body">
+        <div class="hist-action">${icons[h.type] || h.type}: ${partName}</div>
+        <div class="hist-detail">${dot}${h.color || ''}${qtyStr}${h.location ? ' · ' + h.location : ''}<br>Документ: ${h.doc || '—'}</div>
+      </div>
+      <div class="hist-time">${h.time}<br><span style="font-size:9px">${h.date}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ALERTS
+// ═══════════════════════════════════════════════════════════
+function renderAlerts() {
+  const crit = getMergedStock().filter(i => i.qty <= i.min_qty && i.min_qty > 0);
+  const el   = document.getElementById('alertsContent');
+  if (!crit.length) { el.innerHTML = '<div class="empty-state">Критичных позиций нет ✓</div>'; return; }
+  el.innerHTML = crit.map(item => {
+    const shortName = item.name.replace(/^[\w.]+\s/, '');
+    return `<div class="alert-card">
+      <div style="font-size:18px">⚠</div>
+      <div class="alert-body">
+        <div class="alert-name">${shortName}</div>
+        <div class="alert-meta"><span class="cdot" style="background:${colorHex(item.color)}"></span>${item.color} · ${item.code} · ${item.location}</div>
+        <div class="alert-meta" style="margin-top:4px">Мин. запас: ${item.min_qty} ${item.unit}</div>
+      </div>
+      <div class="alert-qty">
+        <div class="alert-num">${item.qty}</div>
+        <div class="alert-min">${item.unit}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════════════
+function openSettings() {
+  document.getElementById('scriptUrl').value = SCRIPT_URL;
+  document.getElementById('settingsModal').classList.add('show');
+}
+function saveUrl() {
+  SCRIPT_URL = document.getElementById('scriptUrl').value.trim();
+  localStorage.setItem('warehouseScriptUrl', SCRIPT_URL);
+  showToast('URL сохранён', 'ok');
+}
+async function testConnection() {
+  const st = document.getElementById('connStatus');
+  st.style.display = 'block';
+  st.className = 'conn-status';
+  st.textContent = 'Проверка…';
+  try {
+    const res = await apiFetch('getColors');
+    if (res.ok) {
+      st.className = 'conn-status conn-ok';
+      st.textContent = '✓ Соединение установлено! Цветов: ' + res.data.length;
+    } else throw new Error(res.error);
+  } catch(e) {
+    st.className = 'conn-status conn-err';
+    st.textContent = '✗ Ошибка: ' + e.message;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type === 'ok' ? 'ok-toast' : 'err-toast');
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function fmtDate(d) {
+  return d.getDate().toString().padStart(2,'0') + '.' +
+    (d.getMonth()+1).toString().padStart(2,'0') + '.' + d.getFullYear();
+}
+function fmtTime(d) {
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  DEMO DATA (used when no server connected)
+// ═══════════════════════════════════════════════════════════
+const DEMO_PARTS = [
+  {code:'7671',name:'ПФ.01.01.000.01.100 СТОЕВАЯ ПВХ 34х110х2000',    category:'СТОЕВАЯ',    min_qty:20, unit:'шт.'},
+  {code:'7721',name:'001.001.001.100 СТОЕВАЯ ПВХ 40х120х2000',          category:'СТОЕВАЯ',    min_qty:20, unit:'шт.'},
+  {code:'7820',name:'ПФ.01.02.600.01.100 ПЕРЕМЫЧКА ПВХ 32,5х110х402',  category:'ПЕРЕМЫЧКА',  min_qty:10, unit:'шт.'},
+  {code:'7949',name:'ПФ.01.02.700.01.100 ПЕРЕМЫЧКА ПВХ 32,5х110х502',  category:'ПЕРЕМЫЧКА',  min_qty:10, unit:'шт.'},
+  {code:'8077',name:'ПФ.01.04.000.01.100 ПЕРЕМЫЧКА ВЕРТИКАЛЬНАЯ 176х28х1712', category:'ПЕРЕМЫЧКА ВЕРТИКАЛЬНАЯ', min_qty:5, unit:'шт.'},
+  {code:'8163',name:'ПФ.01.04.000.01.100 ПЕРЕМЫЧКА ГОРИЗОНТАЛЬНАЯ «Римини» 40х25х382', category:'ПЕРЕМЫЧКА ГОРИЗОНТАЛЬНАЯ', min_qty:5, unit:'шт.'},
+  {code:'8836',name:'ПФ.01.03.600.01.100 ФИЛЕНКА 150х10х183',           category:'ФИЛЕНКА',    min_qty:10, unit:'шт.'},
+  {code:'8842',name:'ПФ.01.03.600.01.100 ФИЛЕНКА 150х10х580',           category:'ФИЛЕНКА',    min_qty:5,  unit:'шт.'},
+];
+const DEMO_STOCK = [
+  {code:'7671',color:'Белый',       qty:120, location:'C-С3-Я2'},
+  {code:'7671',color:'Венге',       qty:4,   location:'C-С3-Я3'},
+  {code:'7671',color:'Антрацит',    qty:55,  location:'C-С4-Я2'},
+  {code:'7721',color:'Белый',       qty:88,  location:'C-С5-Я1'},
+  {code:'7721',color:'Орех',        qty:3,   location:'C-С5-Я2'},
+  {code:'7820',color:'Белый',       qty:200, location:'D-С1-Я3'},
+  {code:'7820',color:'Дуб сонома',  qty:8,   location:'D-С1-Я4'},
+  {code:'7949',color:'Капучино',    qty:170, location:'D-С2-Я3'},
+  {code:'7949',color:'Беленый дуб', qty:0,   location:'D-С2-Я4'},
+  {code:'8077',color:'Серый',       qty:14,  location:'D-С3-Я5'},
+  {code:'8163',color:'Венге',       qty:99,  location:'E-С1-Я2'},
+  {code:'8163',color:'Антрацит',    qty:5,   location:'E-С1-Я3'},
+  {code:'8836',color:'Белый',       qty:55,  location:'F-С2-Я2'},
+  {code:'8842',color:'Орех',        qty:0,   location:'F-С2-Я3'},
+];
+
+// ═══════════════════════════════════════════════════════════
+//  ORDERS
+// ═══════════════════════════════════════════════════════════
+let orders = JSON.parse(localStorage.getItem('w_orders') || '[]');
+let currentFulfillOrder = null;
+let orderLineCount = 0;
+
+function saveOrders() {
+  localStorage.setItem('w_orders', JSON.stringify(orders));
+}
+
+function renderOrders() {
+  const el = document.getElementById('ordersList');
+  const pending = orders.filter(o => o.status !== 'done');
+  const done    = orders.filter(o => o.status === 'done').slice(0, 10);
+
+  // Update badge
+  const badge = document.getElementById('orderTabBadge');
+  badge.style.display = pending.length ? 'block' : 'none';
+  badge.textContent = pending.length;
+
+  if (!orders.length) {
+    el.innerHTML = '<div class="order-empty">Заказов пока нет.<br>Нажмите «+ Новый заказ» чтобы создать.</div>';
+    return;
+  }
+
+  const renderCard = (o) => {
+    const statusLabel = {new:'Ожидает выдачи', partial:'Частично выдан', done:'Выдан'}[o.status] || o.status;
+    const statusCls   = {new:'status-new', partial:'status-partial', done:'status-done'}[o.status] || 'status-new';
+    const linesHtml = o.lines.map((l, li) => {
+      const part = parts.find(p => p.code === l.code) || {};
+      const shortName = (part.name || l.code).replace(/^[\w.]+\s/, '');
+      const inStock = (stock.find(s => s.code === l.code && s.color === l.color) || {}).qty || 0;
+      const enough = inStock >= l.qty;
+      return `<div class="order-line">
+        <div class="order-line-check ${l.issued ? 'checked' : ''}" onclick="toggleLine('${o.id}',${li})">
+          ${l.issued ? '✓' : ''}
+        </div>
+        <div class="order-line-info">
+          <div class="order-line-name" style="${l.issued?'text-decoration:line-through;opacity:.5':''}">${shortName}</div>
+          <div class="order-line-meta">
+            <span class="cdot" style="background:${colorHex(l.color)}"></span>${l.color}
+            ${l.location ? `· <b style="color:var(--accent)">${l.location}</b>` : ''}
+            · На складе: <span style="color:${enough?'var(--ok)':'var(--danger)'}">${inStock}</span>
+          </div>
+        </div>
+        <div class="order-line-qty" style="${l.issued?'opacity:.4':''}">×${l.qty}</div>
+      </div>`;
+    }).join('');
+
+    const canFulfill = o.status !== 'done';
+    return `<div class="order-card">
+      <div class="order-hdr" onclick="toggleOrderCard('ob-${o.id}')">
+        <div class="order-hdr-left">
+          <div class="order-title">Заказ №${o.num} · ${o.master}</div>
+          <div class="order-meta">${o.comment || ''} · ${o.time} ${o.date}</div>
+        </div>
+        <span class="order-status ${statusCls}">${statusLabel}</span>
+      </div>
+      <div class="order-body" id="ob-${o.id}" style="${o.status==='new'?'display:block':'display:none'}">
+        ${linesHtml}
+        ${canFulfill ? `<button class="order-fulfill-btn" onclick="openFulfill('${o.id}')">Выдать по заказу</button>` : ''}
+      </div>
+    </div>`;
+  };
+
+  let html = '';
+  if (pending.length) {
+    html += `<div class="slbl">Ожидают выдачи (${pending.length})</div>`;
+    html += pending.map(renderCard).join('');
+  }
+  if (done.length) {
+    html += `<div class="slbl">Выданные</div>`;
+    html += done.map(renderCard).join('');
+  }
+  el.innerHTML = html;
+}
+
+function toggleOrderCard(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── CREATE ORDER ──────────────────────────────────────────
+function openNewOrder() {
+  orderLineCount = 0;
+  document.getElementById('orderMaster').value = '';
+  document.getElementById('orderComment').value = '';
+  document.getElementById('orderLines').innerHTML = '';
+  addOrderLine();
+  document.getElementById('newOrderModal').classList.add('show');
+}
+
+function addOrderLine() {
+  orderLineCount++;
+  const id = 'ol-' + orderLineCount;
+  const partOptions = parts.map(p =>
+    `<option value="${p.code}">${p.name.replace(/^[\w.]+\s/, '')} (${p.code})</option>`
+  ).join('');
+  const colorOptions = colors.map(c =>
+    `<option value="${c.name}">${c.name}</option>`
+  ).join('');
+
+  const row = document.createElement('div');
+  row.className = 'ol-row';
+  row.id = id;
+  row.innerHTML = `
+    <button class="ol-remove" onclick="document.getElementById('${id}').remove()">×</button>
+    <div class="ol-selects">
+      <div>
+        <div class="flbl">Деталь</div>
+        <select class="finput" id="${id}-code" style="margin-bottom:0;font-size:12px">${partOptions}</select>
+      </div>
+      <div>
+        <div class="flbl">Цвет</div>
+        <select class="finput" id="${id}-color" style="margin-bottom:0;font-size:12px">${colorOptions}</select>
+      </div>
+    </div>
+    <div class="ol-qty-row">
+      <div class="flbl" style="margin:0;white-space:nowrap">Кол-во:</div>
+      <input class="finput" type="number" id="${id}-qty" placeholder="1" min="1" value="1">
+      <div class="flbl" style="margin:0;white-space:nowrap">Ячейка:</div>
+      <input class="finput" type="text" id="${id}-loc" placeholder="D-С5-Я3" style="text-transform:uppercase">
+    </div>`;
+  document.getElementById('orderLines').appendChild(row);
+}
+
+function submitOrder() {
+  const master  = document.getElementById('orderMaster').value.trim();
+  const comment = document.getElementById('orderComment').value.trim();
+  if (!master) { showToast('Введите имя мастера', 'err'); return; }
+
+  const lineEls = document.querySelectorAll('#orderLines .ol-row');
+  if (!lineEls.length) { showToast('Добавьте хотя бы одну позицию', 'err'); return; }
+
+  const lines = [];
+  for (const row of lineEls) {
+    const id  = row.id;
+    const code  = document.getElementById(id + '-code').value;
+    const color = document.getElementById(id + '-color').value;
+    const qty   = parseInt(document.getElementById(id + '-qty').value) || 1;
+    const loc   = document.getElementById(id + '-loc').value.trim();
+    lines.push({code, color, qty, location: loc, issued: false});
+  }
+
+  const now = new Date();
+  const order = {
+    id:      Date.now().toString(),
+    num:     orders.length + 1,
+    master, comment, lines,
+    status:  'new',
+    date:    fmtDate(now),
+    time:    fmtTime(now)
+  };
+  orders.unshift(order);
+  saveOrders();
+  closeModal('newOrderModal');
+  renderOrders();
+  showToast(`Заказ №${order.num} создан ✓`, 'ok');
+
+  // Try save to Google Sheets
+  try { apiFetch('addOrder', order); } catch(e) {}
+}
+
+// ── TOGGLE LINE (кладовщик отмечает выданные) ─────────────
+function toggleLine(orderId, lineIdx) {
+  const o = orders.find(x => x.id === orderId);
+  if (!o || o.status === 'done') return;
+  o.lines[lineIdx].issued = !o.lines[lineIdx].issued;
+  const allDone = o.lines.every(l => l.issued);
+  const anyDone = o.lines.some(l => l.issued);
+  o.status = allDone ? 'done' : anyDone ? 'partial' : 'new';
+  saveOrders();
+  renderOrders();
+}
+
+// ── FULFILL ORDER ─────────────────────────────────────────
+function openFulfill(orderId) {
+  currentFulfillOrder = orders.find(o => o.id === orderId);
+  if (!currentFulfillOrder) return;
+  document.getElementById('fulfillTitle').textContent = `Заказ №${currentFulfillOrder.num}`;
+  document.getElementById('fulfillSub').textContent   = `${currentFulfillOrder.master} · ${currentFulfillOrder.comment || ''}`;
+
+  const merged = getMergedStock();
+  const linesHtml = currentFulfillOrder.lines.map((l, li) => {
+    if (l.issued) return '';
+    const part = parts.find(p => p.code === l.code) || {};
+    const shortName = (part.name || l.code).replace(/^[\w.]+\s/, '');
+    const inStock = (stock.find(s => s.code === l.code && s.color === l.color) || {}).qty || 0;
+    const enough  = inStock >= l.qty;
+    return `<div style="background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid ${enough?'var(--border)':'rgba(239,68,68,.3)'}">
+      <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px">${shortName}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;flex-wrap:wrap;gap:4px">
+        <span><span class="cdot" style="background:${colorHex(l.color)}"></span>${l.color}${l.location ? ` · <b style="color:var(--accent)">${l.location}</b>` : ''}</span>
+        <span>Нужно: <b>${l.qty}</b> · На складе: <b style="color:${enough?'var(--ok)':'var(--danger)'}">${inStock}</b></span>
+      </div>
+      ${!enough ? `<div style="font-size:10px;color:var(--danger);margin-top:4px">⚠ Недостаточно!</div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('fulfillLines').innerHTML = linesHtml || '<div style="color:var(--ok);text-align:center;padding:16px">Все позиции уже выданы ✓</div>';
+  document.getElementById('fulfillModal').classList.add('show');
+}
+
+async function fulfillAll() {
+  if (!currentFulfillOrder) return;
+  const now = new Date();
+  let anyError = false;
+
+  for (const line of currentFulfillOrder.lines) {
+    if (line.issued) continue;
+    const sIdx = stock.findIndex(s => s.code === line.code && s.color === line.color);
+    const avail = sIdx >= 0 ? stock[sIdx].qty : 0;
+    if (avail < line.qty) { anyError = true; continue; }
+
+    // Deduct stock
+    stock[sIdx].qty -= line.qty;
+    line.issued = true;
+
+    // History
+    history.unshift({
+      date: fmtDate(now), time: fmtTime(now),
+      type: 'out', code: line.code, color: line.color,
+      qty: line.qty,
+      doc: `Заказ №${currentFulfillOrder.num} · ${currentFulfillOrder.master}`,
+      location: stock[sIdx]?.location || '',
+      user: 'Кладовщик'
+    });
+    opCount++;
+
+    // Sync each line to server
+    try {
+      await apiFetch('addOperation', {
+        type: 'out', code: line.code, color: line.color, qty: line.qty,
+        name: (parts.find(p => p.code === line.code) || {}).name || line.code,
+        doc: `Заказ №${currentFulfillOrder.num} · ${currentFulfillOrder.master}`,
+        location: stock[sIdx]?.location || '', user: 'Кладовщик'
+      });
+    } catch(e) {}
+  }
+
+  const allDone = currentFulfillOrder.lines.every(l => l.issued);
+  currentFulfillOrder.status = allDone ? 'done' : 'partial';
+  saveOrders();
+  saveLocal();
+  closeModal('fulfillModal');
+  rebuildAll();
+  renderOrders();
+
+  // Sync order status to server
+  try {
+    await apiFetch('updateOrder', {
+      id: currentFulfillOrder.id,
+      status: currentFulfillOrder.status,
+      lines: currentFulfillOrder.lines
+    });
+  } catch(e) {}
+
+  if (anyError) showToast('Часть позиций не выдана — недостаточно на складе', 'err');
+  else showToast(`Заказ №${currentFulfillOrder.num} выдан ✓`, 'ok');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EXPORT ALERTS TO GOOGLE SHEETS
+// ═══════════════════════════════════════════════════════════
+async function exportAlerts() {
+  const crit = getMergedStock().filter(i => i.qty <= i.min_qty && i.min_qty > 0);
+  if (!crit.length) { showToast('Критичных позиций нет', 'ok'); return; }
+  showToast('Экспорт…', 'ok');
+  try {
+    const res = await apiFetch('exportAlerts', {
+      items: crit.map(i => ({
+        code:     i.code,
+        name:     i.name,
+        color:    i.color,
+        qty:      i.qty,
+        min_qty:  i.min_qty,
+        location: i.location,
+        unit:     i.unit
+      })),
+      date: fmtDate(new Date())
+    });
+    if (res.ok) showToast(`✓ Экспортировано ${crit.length} позиций → лист "Заказ поставщику"`, 'ok');
+    else showToast('Ошибка: ' + res.error, 'err');
+  } catch(e) {
+    showToast('Нет связи с таблицей', 'err');
+  }
+}
+
+init();
 </script>
 </body>
 </html>
