@@ -66,17 +66,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;backgroun
 .rchev{font-size:12px;color:var(--muted);transition:transform .2s}.rchev.open{transform:rotate(180deg)}
 .rbody{display:none;padding:8px 10px 10px;overflow-x:auto}.rbody.open{display:block}
 .trow{display:flex;align-items:center;gap:4px;margin-bottom:3px}
-.tlbl{font-size:9px;color:var(--muted);width:26px;min-width:26px;flex-shrink:0;text-align:right}
-.cscroll{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.tlbl{font-size:9px;color:var(--muted);width:24px;min-width:24px;flex-shrink:0;text-align:right}
+.cscroll{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;padding:1px 0}
 .cscroll::-webkit-scrollbar{display:none}
-.cell{width:26px;min-width:26px;height:18px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:7px;cursor:pointer;flex-shrink:0;touch-action:manipulation}
+.cell{width:24px;min-width:24px;max-width:24px;height:20px;min-height:20px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:7px;cursor:pointer;flex-shrink:0;touch-action:manipulation;box-sizing:border-box}
 .cell.occ{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4);color:#93c5fd}
 .cell.crit{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5}
 .cell.found{background:rgba(250,204,21,.3);border-color:#fbbf24;color:#fbbf24}
 .cell.empty{background:rgba(255,255,255,.03)}
 .cell.ground{background:rgba(120,200,80,.1);border-color:rgba(120,200,80,.3);color:#86efac}
-.slbls{display:flex;gap:3px;padding-left:30px;margin-bottom:2px}
-.slb{width:26px;font-size:7px;color:var(--muted);text-align:center;flex-shrink:0}
+.slbls{display:flex;gap:2px;padding-left:28px;margin-bottom:2px}
+.slb{width:24px;min-width:24px;max-width:24px;font-size:7px;color:var(--muted);text-align:center;flex-shrink:0}
 .mleg{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 0}
 .mleg-i{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
 .mleg-b{width:11px;height:11px;border-radius:2px}
@@ -321,7 +321,7 @@ async function syncAll(){
     clrs=(r.colors&&r.colors.length)?r.colors:defClrs();
     if(r.orders&&r.orders.length){ var ids=new Set(r.orders.map(function(o){return o.id;})); orders=r.orders.concat(orders.filter(function(o){return !ids.has(o.id);})); }
     saveL(); saveOrds();
-    document.getElementById('syncInfo').textContent='Синхронизировано · '+fT(new Date());
+    document.getElementById('syncInfo').textContent='Синхронизировано · '+fT(new Date())+' (авто)';
     document.getElementById('offlineBadge').style.display='none';
   }catch(e){
     loadL();
@@ -527,14 +527,18 @@ function goToMap(code,color){
   setTimeout(function(){
     var item=getMerged().find(function(x){return x.code===code&&x.color===color;});
     if(item&&item.location){
-      // scroll to found cell
-      var loc=item.location;
-      showCell(loc);
-      // open rack
-      var row=loc.split('-')[0];
-      openRack('rb-'+row);
+      var rowLetter=item.location.split('-')[0];
+      openRack('rb-'+rowLetter);
+      // Scroll к найденной ячейке
+      setTimeout(function(){
+        var found=document.querySelector('.cell.found');
+        if(found){
+          found.scrollIntoView({behavior:'smooth',block:'center'});
+          showCell(item.location);
+        }
+      },100);
     }
-  },200);
+  },250);
 }
 
 function renderOps(){
@@ -575,8 +579,10 @@ async function confirmOp(){
     var res=await api('addOperation',{type:curOp,code:curSt.code,name:pName,color:color,qty:qty,doc:doc,location:curSt.location,user:'Кладовщик'});
     if(res.ok){
       var idx=stock.findIndex(function(s){return s.code===curSt.code&&s.color===color;});
-      if(idx>=0) stock[idx].qty+=curOp==='in'?qty:-qty;
-      else if(curOp==='in') stock.push({code:curSt.code,name:pName,color:color,qty:qty,location:curSt.location});
+      // Используем newQty от сервера если есть, иначе считаем локально
+      var newQty = (res.newQty !== undefined) ? res.newQty : ((idx>=0 ? stock[idx].qty : 0) + (curOp==='in'?qty:-qty));
+      if(idx>=0) stock[idx].qty=newQty;
+      else if(curOp==='in') stock.push({code:curSt.code,name:pName,color:color,qty:newQty,location:curSt.location});
       var now=new Date();
       hist.unshift({date:fD(now),time:fT(now),type:curOp,code:curSt.code,name:pName,color:color,qty:qty,doc:doc,location:curSt.location,user:'Кладовщик'});
       opCount++; saveL(); rebuildAll();
@@ -611,9 +617,11 @@ async function confirmMove(){
 
 function cleanDate(s){
   if(!s) return '';
-  // Handle Google Sheets Date object serialized as string like "Sat Dec 30 1899..."
-  if(s.length>10&&s.includes('GMT')) return '';
-  return s;
+  var str=String(s);
+  // Отфильтровать мусорные даты из Google Sheets (1899/1900)
+  if(str.includes('1899')||str.includes('1900')) return '';
+  if(str.includes('GMT')&&str.length>15) return '';
+  return str;
 }
 function renderHist(){
   var el=document.getElementById('histContent');
@@ -763,13 +771,19 @@ async function doExportOrder(oid){
       id:o.id,num:o.num,master:o.master,comment:o.comment||'',
       date:o.date,time:o.time,lines:o.lines,status:o.status
     });
-    if(res.ok) toast('✓ Заказ №'+o.num+' → лист "Заказ №'+o.num+'"','ok');
+    if(res.ok) toast('✓ Заказ №'+o.num+' добавлен в "Заказы на печать"','ok');
     else toast('Ошибка: '+(res.error||''),'err');
   }catch(e){toast('Нет связи с таблицей','err');}
 }
 
 
 syncAll();
+// Автосинхронизация каждые 30 секунд
+setInterval(function(){
+  // Не синхронизируем если открыта модалка
+  var anyOpen = document.querySelector('.overlay.show');
+  if (!anyOpen) syncAll();
+}, 30000);
 </script>
 </body>
 </html>
