@@ -65,18 +65,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;backgroun
 .rinfo{font-size:10px;color:var(--muted);margin-left:8px}
 .rchev{font-size:12px;color:var(--muted);transition:transform .2s}.rchev.open{transform:rotate(180deg)}
 .rbody{display:none;padding:8px 10px 10px;overflow-x:auto}.rbody.open{display:block}
-.trow{display:flex;align-items:center;gap:4px;margin-bottom:3px}
-.tlbl{font-size:9px;color:var(--muted);width:24px;min-width:24px;flex-shrink:0;text-align:right}
-.cscroll{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;padding:1px 0}
+.trow{display:flex;align-items:flex-start;gap:4px;margin-bottom:2px;height:22px;min-height:22px;max-height:22px;overflow:hidden}
+.tlbl{font-size:9px;color:var(--muted);width:24px;min-width:24px;flex-shrink:0;text-align:right;line-height:22px;height:22px}
+.cscroll{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;height:22px;align-items:center}
 .cscroll::-webkit-scrollbar{display:none}
-.cell{width:24px;min-width:24px;max-width:24px;height:20px;min-height:20px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:7px;cursor:pointer;flex-shrink:0;touch-action:manipulation;box-sizing:border-box}
+.cell{width:24px;min-width:24px;max-width:24px;height:20px;min-height:20px;max-height:20px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:7px;cursor:pointer;flex-shrink:0;touch-action:manipulation;box-sizing:border-box;overflow:hidden}
 .cell.occ{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4);color:#93c5fd}
 .cell.crit{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5}
 .cell.found{background:rgba(250,204,21,.3);border-color:#fbbf24;color:#fbbf24}
 .cell.empty{background:rgba(255,255,255,.03)}
 .cell.ground{background:rgba(120,200,80,.1);border-color:rgba(120,200,80,.3);color:#86efac}
-.slbls{display:flex;gap:2px;padding-left:28px;margin-bottom:2px}
-.slb{width:24px;min-width:24px;max-width:24px;font-size:7px;color:var(--muted);text-align:center;flex-shrink:0}
+.slbls{display:flex;gap:2px;padding-left:28px;margin-bottom:2px;height:14px;align-items:center}
+.slb{width:24px;min-width:24px;max-width:24px;height:12px;font-size:7px;color:var(--muted);text-align:center;flex-shrink:0;line-height:12px}
 .mleg{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 0}
 .mleg-i{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
 .mleg-b{width:11px;height:11px;border-radius:2px}
@@ -308,7 +308,7 @@ function saveL(){ localStorage.setItem('w_parts',JSON.stringify(parts)); localSt
 function loadL(){ parts=JSON.parse(localStorage.getItem('w_parts')||'[]'); stock=JSON.parse(localStorage.getItem('w_stock')||'[]'); hist=JSON.parse(localStorage.getItem('w_hist')||'[]'); rack=JSON.parse(localStorage.getItem('w_rack')||'null')||defRack(); clrs=JSON.parse(localStorage.getItem('w_clrs')||'null')||defClrs(); }
 function saveOrds(){ localStorage.setItem('w_orders',JSON.stringify(orders)); }
 
-function defRack(){ return [{row:'A',sections:4,tiers:4,length:'105 п/м',load:'1000 кг',description:'Ряд 1A'},{row:'B',sections:3,tiers:4,length:'105 п/м',load:'1000 кг',description:'Ряд 1B'},{row:'C',sections:10,tiers:5,length:'280 п/м',load:'1000 кг',description:'Ряд 2 — стоевая'},{row:'D',sections:13,tiers:7,length:'357 п/м',load:'550 кг',description:'Ряд 3D — основной'},{row:'E',sections:13,tiers:7,length:'357 п/м',load:'550 кг',description:'Ряд 3E — основной'},{row:'F',sections:11,tiers:6,length:'312 п/м',load:'550 кг',description:'Ряд 4'}]; }
+function defRack(){return [{row:'A',sections:15,tiers:4,length:'870 мм',load:'650 кг',description:'Ряд 1 A'},{row:'B',sections:12,tiers:4,length:'870 мм',load:'650 кг',description:'Ряд 1 B'},{row:'C',sections:22,tiers:5,length:'1400 мм',load:'1000 кг',description:'Ряд 2 C — стоевая'},{row:'D',sections:17,tiers:7,length:'870 мм',load:'650 кг',description:'Ряд 3 D — основной'},{row:'E',sections:17,tiers:7,length:'870 мм',load:'650 кг',description:'Ряд 3 E — основной'},{row:'F',sections:18,tiers:6,length:'870 мм',load:'650 кг',description:'Ряд 4 F'}];}
 function defClrs(){ return [{name:'Белый',hex:'#F8F8F8'},{name:'Венге',hex:'#3D2B1F'},{name:'Орех',hex:'#8B5E3C'},{name:'Антрацит',hex:'#4A4A55'},{name:'Дуб сонома',hex:'#C9A96E'},{name:'Капучино',hex:'#D4B896'},{name:'Беленый дуб',hex:'#E8D5AA'},{name:'Серый',hex:'#9CA3AF'}]; }
 
 async function syncAll(){
