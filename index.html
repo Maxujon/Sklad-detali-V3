@@ -73,7 +73,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;backgroun
 .cell.occ{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4);color:#93c5fd}
 .cell.crit{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5}
 .cell.found{background:rgba(250,204,21,.3);border-color:#fbbf24;color:#fbbf24}
-.cell.empty{background:rgba(255,255,255,.03)}
+.cell.empty{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.15)}
 .cell.ground{background:rgba(120,200,80,.1);border-color:rgba(120,200,80,.3);color:#86efac}
 .slbls{display:flex;gap:2px;padding-left:28px;margin-bottom:2px;height:14px;align-items:center}
 .slb{width:24px;min-width:24px;max-width:24px;height:12px;font-size:7px;color:var(--muted);text-align:center;flex-shrink:0;line-height:12px}
@@ -446,6 +446,9 @@ function renderMap(hl){
   mapHL=hl;
   var el=document.getElementById('mapContent');
   if(!rack.length){el.innerHTML='<div class="empty">Карта не загружена</div>';return;}
+  // Запомнить какие ряды открыты
+  var openRacks=[];
+  document.querySelectorAll('.rbody.open').forEach(function(b){openRacks.push(b.id);});
   var idx={};
   getMerged().forEach(function(i){if(i.location)idx[i.location]=i;});
   var h='';
@@ -471,12 +474,17 @@ function renderMap(hl){
     h+='<div class="rblock"><div class="rhdr" data-rack="'+rid+'"><div style="display:flex;align-items:center"><span class="rbadge">'+rk.row+'</span><span class="rinfo">'+rk.description+' · '+rk.sections+'с · '+(rk.tiers+1)+'я · '+rk.load+'</span></div><span class="rchev" id="chev-'+rid+'">▼</span></div><div class="rbody" id="'+rid+'">'+slbls+rows+'<div class="mleg"><div class="mleg-i"><div class="mleg-b" style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4)"></div>Занято</div><div class="mleg-i"><div class="mleg-b" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4)"></div>Критично</div><div class="mleg-i"><div class="mleg-b" style="background:rgba(250,204,21,.3);border:1px solid #fbbf24"></div>Найдено</div><div class="mleg-i" style="color:var(--ok)">Я0–Я1 = оперативное</div></div></div></div>';
   });
   el.innerHTML=h;
-  el.addEventListener('click',function(e){
+  // Удаляем старый listener перед добавлением нового
+  if(el._mapListener) el.removeEventListener('click', el._mapListener);
+  el._mapListener = function(e){
     var cell=e.target.closest('[data-loc]');
     if(cell){showCell(cell.dataset.loc);return;}
     var hdr=e.target.closest('[data-rack]');
     if(hdr){toggleRack(hdr.dataset.rack);}
-  });
+  };
+  el.addEventListener('click', el._mapListener);
+  // Восстановить открытые ряды
+  openRacks.forEach(function(rid){openRack(rid);});
   if(hl){var found=getMerged().find(function(i){return i.code===hl.code&&i.color===hl.color;});if(found&&found.location)openRack('rb-'+found.location.split('-')[0]);}
 }
 
@@ -778,12 +786,65 @@ async function doExportOrder(oid){
 
 
 syncAll();
-// Автосинхронизация каждые 30 секунд
+// Автосинхронизация каждые 30 секунд (тихая — не перерисовывает карту)
 setInterval(function(){
-  // Не синхронизируем если открыта модалка
   var anyOpen = document.querySelector('.overlay.show');
-  if (!anyOpen) syncAll();
+  if (!anyOpen) silentSync();
 }, 30000);
+
+async function silentSync(){
+  try{
+    var res=await api('getAll');
+    if(!res.ok) return;
+    parts   = res.parts   || parts;
+    stock   = res.stock   || stock;
+    hist    = res.history || hist;
+    if(res.colors && res.colors.length) clrs = res.colors;
+    if(res.orders && res.orders.length){
+      var ids=new Set(res.orders.map(function(o){return o.id;}));
+      orders=res.orders.concat(orders.filter(function(o){return !ids.has(o.id);}));
+    }
+    // Обновляем только то что нужно — НЕ карту если она открыта
+    var onMap = document.getElementById('panel-map').classList.contains('active');
+    updateStats();
+    if(!onMap){
+      renderStock();
+      renderOps();
+    } else {
+      // На карте — только обновляем ячейки без закрытия рядов
+      updateMapCells();
+    }
+    renderHist();
+    renderAlerts();
+    renderOrders();
+    saveL();
+    document.getElementById('syncInfo').textContent='Синхронизировано · '+fT(new Date())+' (авто)';
+    document.getElementById('offlineBadge').style.display='none';
+  }catch(e){
+    document.getElementById('offlineBadge').style.display='inline';
+  }
+}
+
+function updateMapCells(){
+  // Обновляем только содержимое ячеек без перерисовки структуры
+  var idx={};
+  getMerged().forEach(function(i){if(i.location)idx[i.location]=i;});
+  document.querySelectorAll('.cell[data-loc]').forEach(function(cell){
+    var loc=cell.dataset.loc;
+    var item=idx[loc];
+    var t=parseInt((loc.split('-')[2]||'Я0').replace('Я',''));
+    var base = t===0 ? 'ground' : 'empty';
+    if(item){
+      var isHL=mapHL&&item.code===mapHL.code&&item.color===mapHL.color;
+      if(isHL){cell.className='cell found';cell.textContent='★';}
+      else if(item.qty<=item.min_qty&&item.min_qty>0){cell.className='cell crit';cell.textContent='!';}
+      else{cell.className='cell occ';cell.textContent='●';}
+    } else {
+      cell.className='cell '+base;
+      cell.textContent='';
+    }
+  });
+}
 </script>
 </body>
 </html>
